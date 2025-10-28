@@ -1,0 +1,17 @@
+{
+	"console" : {
+		"enabled"     : true,
+		"datePattern" : "yyyy-MM-dd HH:mm:ss.fff",
+		"level"       : "DEBUG"
+	},
+	"appenders" : [ {
+			"type"        : "File",
+			"name"        : "fileLogger1",
+			"path"        : "C:/Users/EdwardBlackwell/Documents/logs",
+			"fileName"    : "log-file.log",
+			"datePattern" : "yyyy-MM-dd HH:mm:ss.fff",
+			"level"       : "DEBUG",
+			"append"      : true
+		}
+	]
+}
