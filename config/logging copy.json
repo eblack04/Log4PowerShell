@@ -1,0 +1,37 @@
+{
+	"console" : {
+		"enabled"     : true,
+		"datePattern" : "yyyy-MM-dd HH:mm:ss.fff",
+		"level"       : "DEBUG"
+	},
+	"appenders" : [ {
+			"type"        : "File",
+			"name"        : "fileLogger1",
+			"path"        : "C:/Users/EdwardBlackwell/Documents/logs",
+			"fileName"    : "log-file.log",
+			"datePattern" : "yyyy-MM-dd HH:mm:ss.fff",
+			"level"       : "INFO"
+		}, {
+			"type"        : "CSV",
+			"name"        : "csvLogger1",
+			"path"        : "C:/Users/EdwardBlackwell/Documents/logs",
+			"fileName"    : "log-file.csv",
+			"datePattern" : "yyyy-MM-dd HH:mm:ss.fff",
+			"level"       : "DEBUG"
+		}, {
+			"type"             : "GoogleChat",
+			"name"             : "googleChat1",
+			"spaceId"          : "",
+			"key"              : "",
+			"datePattern"      : "yyyy-MM-dd HH:mm:ss.fff",
+			"level"            : "INFO",
+			"maxRetryAttempts" : 10,
+			"batchConfig"      : {
+				"batchInterval"    : 5,
+				"maxBatchSize"     : 50,
+				"maxMessageLength" : 4000,
+				"retryInterval"    : 10
+			}
+		}
+	]
+}

@@ -1,0 +1,246 @@
+<#
+.SYNOPSIS
+    Builds a PowerShell module by concatenating script files from specified directories,
+    and outputs a module folder containing both a .psm1 file and a module manifest (.psd1).
+.DESCRIPTION
+    This script creates a module folder (suitable for Publish-Module) by merging .ps1 files
+    from three source folders:
+      - Classes: Contains class definitions.
+      - Private: Contains private functions.
+      - Public: Contains public functions.
+    After writing the .psm1 file, the script automatically generates a module manifest (.psd1)
+    using New-ModuleManifest.
+.PARAMETER ModuleName
+    The name of the module. The output folder will be named after the module, and the module
+    files will be named as <ModuleName>.psm1 and <ModuleName>.psd1. Default is 'VMware.Lifecycle'.
+.PARAMETER OutputFolder
+    The parent folder where the module folder will be created. Default is '.\Modules'.
+.PARAMETER ClassesFolder
+    The folder containing .ps1 files with class definitions. Default is '.\source\Classes'.
+.PARAMETER PrivateFolder
+    The folder containing .ps1 files with private functions. Default is '.\source\Private'.
+.PARAMETER PublicFolder
+    The folder containing .ps1 files with public functions. Default is '.\source\Public'.
+.PARAMETER ModuleVersion
+    The version number to embed in the module header and manifest (e.g., '1.0.0'). This parameter is required.
+.PARAMETER CompanyName
+    The company name used for the manifest’s CompanyName.
+.PARAMETER Author
+    The module author.
+.PARAMETER RequiredModules
+    An array of module names that your module depends on. Default is an empty array.
+.EXAMPLE
+    .\Build-Module.ps1 -ModuleName 'TestModule' -ModuleVersion '1.0.0' -OutputFolder '.\Modules'
+#>
+[CmdletBinding()]
+Param (
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$ModuleName = "VMware.Logging",
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$OutputFolder = ".\modules",
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$ClassesFolder = ".\classes",
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$EnumsFolder = ".\enums",
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$PrivateFolder = ".\private",
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$PublicFolder = ".\public",
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$ModuleVersion = "1.0",
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$Description = "vSphere Logging",
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$PowershellVersion = "7.4",
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$CompanyName = "Broadcom",
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$Author = "Todd Blackwell",
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string[]]$RequiredModules = @()
+)
+
+#------------------------------------------
+# Define full paths for the module script and manifest.
+#------------------------------------------
+$ModulePsm1Path = Join-Path -Path $OutputFolder -ChildPath ("$ModuleName.psm1")
+$ModuleManifestPath = Join-Path -Path $OutputFolder -ChildPath ("$ModuleName.psd1")
+
+#------------------------------------------
+# Build the module file content in memory.
+#------------------------------------------
+$script:ModuleContent = @()
+
+# Module Header
+$ModuleHeader = @"
+# ====================================================================================
+# Module: $ModuleName
+# Version: $ModuleVersion
+# Generated: $(Get-Date -Format 'MM-dd-yyyy HH:mm:ss')
+# Description: Module for managing vSphere Lifecycle
+# ====================================================================================
+"@
+$script:ModuleContent += $ModuleHeader
+
+#------------------------------------------
+# Helper Function: Get-FileContent
+#------------------------------------------
+Function Get-FileContent {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true)][string]$Path
+    )
+
+    Write-Host "Getting file content for file:  $Path"
+
+    Try {
+        $content = Get-Content -LiteralPath $Path -ErrorAction Stop
+        $filteredContent = $()
+
+        $content | ForEach-Object {
+            Write-Host "Line: $_ end-of-line"
+            if ($_ -notmatch "using module *") {
+                $filteredContent += $_ + "`n"
+            }
+        }
+
+        return $filteredContent
+    } Catch {
+        Write-Error "ERROR | Failed to read file '$Path'. Error: $($_.Exception.Message)"
+        throw
+    }
+}
+
+#------------------------------------------
+# Create a list to collect public function names for manifest export.
+#------------------------------------------
+$PublicFunctionNames = [System.Collections.Generic.List[string]]::new()
+
+#------------------------------------------
+# Helper Function: Merge-Files
+#------------------------------------------
+Function Merge-Files {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory=$true)][string]$SectionName,
+        [parameter(Mandatory=$true)][System.IO.FileInfo[]]$Files,
+        [parameter(Mandatory=$false)][Switch]$IsPublic=$false
+    )
+
+    foreach ($file in $Files) {
+        $nameBase = $file.BaseName
+
+        # Read the file's content.
+        $content = Get-FileContent -Path $file.FullName
+
+        # Build header and footer for clarity.
+        $sectionHeader = @"
+# -------------------------------------------------------------------------
+# Start: $SectionName - $nameBase
+# -------------------------------------------------------------------------
+"@
+        $sectionFooter = @"
+# -------------------------------------------------------------------------
+# End: $SectionName - $nameBase
+# -------------------------------------------------------------------------
+"@
+
+        $script:ModuleContent += $sectionHeader
+        $script:ModuleContent += $content
+        $script:ModuleContent += $sectionFooter
+
+        if ($IsPublic) {
+            $PublicFunctionNames.Add($nameBase)
+        }
+    }
+}
+
+#------------------------------------------
+# Validate input directories; skip any that do not exist.
+#------------------------------------------
+foreach ($folder in @($ClassesFolder, $PrivateFolder, $PublicFolder)) {
+    if (-not (Test-Path -LiteralPath $folder)) {
+        Write-Warning "WARNING | Directory '$folder' does not exist and will be skipped."
+    }
+}
+
+#------------------------------------------
+# Merge class files.
+#------------------------------------------
+if (Test-Path -LiteralPath $ClassesFolder) {
+    Write-Host "Merging files in the $ClassesFolder folder"
+    $classFiles = Get-ChildItem -Path $ClassesFolder -Filter '*.psm1' -File -ErrorAction SilentlyContinue
+    if ($classFiles -and $classFiles.Count -gt 0) {
+        Merge-Files -SectionName "Class Definition" -Files $classFiles
+    }
+}
+
+#------------------------------------------
+# Merge enumeration files.
+#------------------------------------------
+if (Test-Path -LiteralPath $EnumsFolder) {
+    Write-Host "Merging files in the $EnumsFolder folder"
+    $enumsFiles = Get-ChildItem -Path $EnumsFolder -Filter '*.psm1' -File -ErrorAction SilentlyContinue
+    if ($enumsFiles -and $enumsFiles.Count -gt 0) {
+        Merge-Files -SectionName "Enum Definition" -Files $enumsFiles
+    }
+}
+
+#------------------------------------------
+# Merge Private function files.
+#------------------------------------------
+if (Test-Path -LiteralPath $PrivateFolder) {
+    Write-Host "Merging files in the $PrivateFolder folder"
+    $privateFiles = Get-ChildItem -Path $PrivateFolder -Filter '*.ps1' -File -ErrorAction SilentlyContinue
+    if ($privateFiles -and $privateFiles.Count -gt 0) {
+        Merge-Files -SectionName "Private Function" -Files $privateFiles 
+    }
+}
+
+#------------------------------------------
+# Merge Public function files.
+#------------------------------------------
+if (Test-Path -LiteralPath $PublicFolder) {
+    Write-Host "Merging files in the $PublicFolder folder"
+    $publicFiles = Get-ChildItem -Path $PublicFolder -Filter '*.ps1' -File -ErrorAction SilentlyContinue
+    if ($publicFiles -and $publicFiles.Count -gt 0) {
+        Merge-Files -SectionName "Public Function" -Files $publicFiles -IsPublic
+    }
+}
+
+#------------------------------------------
+# Append Export-ModuleMember statement for public functions.
+#------------------------------------------
+if ($PublicFunctionNames.Count -gt 0) {
+    $exportLine = "Export-ModuleMember -Function " + ($PublicFunctionNames -join ', ')
+    $script:ModuleContent += $exportLine
+}
+
+#------------------------------------------
+# Write the complete module content to the .psm1 file.
+#------------------------------------------
+try {
+    Set-Content -Path $ModulePsm1Path -Value $script:ModuleContent -ErrorAction Stop -Encoding UTF8
+    Write-Host "INFO | Successfully wrote module file to '$ModulePsm1Path'." -ForegroundColor Green
+}
+catch {
+    Write-Error "ERROR | Failed to write module file '$ModulePsm1Path'. Error: $($_.Exception.Message)"
+    throw
+}
+
+#------------------------------------------
+# Generate the module manifest (.psd1) for publishing.
+#------------------------------------------
+try {
+    $ExportedFunctions = if ($PublicFunctionNames.Count -gt 0) { $PublicFunctionNames.ToArray() } else { @() }
+    $manifestParams = @{
+        Path              = $ModuleManifestPath
+        RootModule        = (Split-Path -Leaf $ModulePsm1Path)
+        ModuleVersion     = $ModuleVersion
+        Author            = $Author
+        CompanyName       = $CompanyName
+        Description       = $Description
+        FunctionsToExport = $ExportedFunctions
+        PowerShellVersion = $PowershellVersion
+        RequiredModules   = $RequiredModules
+    }
+    New-ModuleManifest @manifestParams | Out-Null
+    Write-Host "INFO | Module manifest created at '$ModuleManifestPath'." -ForegroundColor Green
+}
+catch {
+    Write-Error "ERROR | Failed to create module manifest '$ModuleManifestPath'. Error: $($_.Exception.Message)"
+    throw
+}
+
+#------------------------------------------
+# Final summary.
+#------------------------------------------
+Write-Output "Module build complete. The module '$ModuleName' (version $ModuleVersion) has been built in folder '$ModuleFolder'. You can now use Publish-Module on this folder."
