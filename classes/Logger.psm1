@@ -12,7 +12,7 @@ class Logger {
     # The log level for the console if it's enabled.
     [LogLevel]$consoleLevel = [LogLevel]::INFO
 
-    [string]$consolePattern = "yyyy-MM-dd HH:mm:ss.fff"
+    [string]$consoleDatePattern = "yyyy-MM-dd HH:mm:ss.fff"
 
     [bool]$consoleEnabled = $false
 
@@ -28,7 +28,7 @@ class Logger {
         if ($loggingConfig.console.enabled) {
             $this.consoleEnabled = $true
             if ($loggingConfig.console.level) { $this.consoleLevel = [LogLevel]$loggingConfig.console.level }
-            if ($loggingConfig.console.pattern) { $this.consolePattern = [string]$loggingConfig.console.pattern }
+            if ($loggingConfig.console.datePattern) { $this.consoleDatePattern = [string]$loggingConfig.console.datePattern }
         }
 
         foreach ($appenderConfig in $loggingConfig.appenders) {
@@ -37,12 +37,13 @@ class Logger {
             $className = "$($appenderConfig.type)Appender"
             $appender = New-Object -TypeName $className -ArgumentList $appenderConfig
             $loggingThread = [LoggingThread]::new($appender)
-            if ($loggingConfig.batchConfig) {
+            if ($appenderConfig.batchConfig) {
                 $loggingThread.isBatched = $true
-                if ($loggingConfig.batchInterval) { $loggingThread.batchInterval = $loggingConfig.batchConfig.batchInterval }
-                if ($loggingConfig.maxBatchSize) { $loggingThread.maxBatchSize = $loggingConfig.batchConfig.maxBatchSize }
-                if ($loggingConfig.maxMessageLength) { $loggingThread.maxMessageLength = $loggingConfig.batchConfig.maxMessageLength }
-                if ($loggingConfig.retryInterval) { $loggingThread.retryInterval = $loggingConfig.batchConfig.retryInterval }
+                if ($appenderConfig.batchConfig.maxRetryAttempts) { $loggingThread.BatchInterval = $appenderConfig.batchConfig.maxRetryAttempts }
+                if ($appenderConfig.batchConfig.batchInterval) { $loggingThread.BatchInterval = $appenderConfig.batchConfig.batchInterval }
+                if ($appenderConfig.batchConfig.maxBatchSize) { $loggingThread.MaxBatchSize = $appenderConfig.batchConfig.maxBatchSize }
+                if ($appenderConfig.batchConfig.maxMessageLength) { $loggingThread.MaxMessageLength = $appenderConfig.batchConfig.maxMessageLength }
+                if ($appenderConfig.batchConfig.retryInterval) { $loggingThread.RetryInterval = $appenderConfig.batchConfig.retryInterval }
             }
             $this.loggingThreads += $loggingThread
         }
@@ -79,7 +80,7 @@ class Logger {
 
         if ($this.consoleEnabled) {
             if ($logMessage.GetLevel() -le $this.consoleLevel ) {
-                Write-Host "$((Get-Date).ToString($this.consolePattern)) :: $($logMessage.GetMessage())"
+                Write-Host "$((Get-Date).ToString($this.consoleDatePattern)) :: $($logMessage.GetMessage())"
             }
         }
 

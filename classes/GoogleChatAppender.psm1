@@ -5,17 +5,14 @@ using module "..\enums\LogLevel.psm1"
 [NoRunspaceAffinity()]
 class GoogleChatAppender : Appender {
 
-    [string]$spaceId
-
-    [string]$key
+    [string]$webhookUrl
 
     [int]$maxRetryAttempts = 10
 
     [int]$retryInterval = 10
 
     GoogleChatAppender([object]$config) : base($config) {
-        $this.spaceId = $config.spaceId
-        $this.key = $config.key
+        $this.webhookUrl = $config.webhookUrl
     }
 
     [void] WriteLog([string]$message) {

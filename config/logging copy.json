@@ -21,12 +21,11 @@
 		}, {
 			"type"             : "GoogleChat",
 			"name"             : "googleChat1",
-			"spaceId"          : "",
-			"key"              : "",
+			"webhookUrl"       : "https://chat.googleapis.com/v1/spaces/AAQA_2CyzVs/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=B4hawzNnqxiS_E5vpvFgZ0l5TlXFND6KGvTv5BEV2PQ",
 			"datePattern"      : "yyyy-MM-dd HH:mm:ss.fff",
 			"level"            : "INFO",
-			"maxRetryAttempts" : 10,
 			"batchConfig"      : {
+				"maxRetryAttempts" : 10,
 				"batchInterval"    : 5,
 				"maxBatchSize"     : 50,
 				"maxMessageLength" : 4000,

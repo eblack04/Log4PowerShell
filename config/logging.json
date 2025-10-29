@@ -11,7 +11,27 @@
 			"fileName"    : "log-file.log",
 			"datePattern" : "yyyy-MM-dd HH:mm:ss.fff",
 			"level"       : "DEBUG",
-			"append"      : true
+			"append"      : true,
+			"batchConfig"      : {
+				"maxRetryAttempts" : 10,
+				"batchInterval"    : 5,
+				"maxBatchSize"     : 50,
+				"maxMessageLength" : 500,
+				"retryInterval"    : 10
+			}
+		}, {
+			"type"             : "GoogleChat",
+			"name"             : "googleChat1",
+			"webhookUrl"       : "https://chat.googleapis.com/v1/spaces/AAQA_2CyzVs/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=B4hawzNnqxiS_E5vpvFgZ0l5TlXFND6KGvTv5BEV2PQ",
+			"datePattern"      : "yyyy-MM-dd HH:mm:ss.fff",
+			"level"            : "DEBUG",
+			"batchConfig"      : {
+				"maxRetryAttempts" : 10,
+				"batchInterval"    : 5,
+				"maxBatchSize"     : 50,
+				"maxMessageLength" : 500,
+				"retryInterval"    : 10
+			}
 		}
 	]
 }

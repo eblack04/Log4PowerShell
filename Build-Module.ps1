@@ -1,15 +1,21 @@
 <#
 .SYNOPSIS
-    Builds a PowerShell module by concatenating script files from specified directories,
-    and outputs a module folder containing both a .psm1 file and a module manifest (.psd1).
+    Builds a PowerShell module from the project script and module files.
 .DESCRIPTION
-    This script creates a module folder (suitable for Publish-Module) by merging .ps1 files
-    from three source folders:
-      - Classes: Contains class definitions.
-      - Private: Contains private functions.
-      - Public: Contains public functions.
-    After writing the .psm1 file, the script automatically generates a module manifest (.psd1)
-    using New-ModuleManifest.
+    This script concatenates both script and module files from specified project
+    directories, and outputs the generated module (.psm1) and manifest (.psd1) 
+    files into the modules directory.
+
+    The source folders containing the project .psm1 and .ps1 files are as 
+    follows:
+
+      - enums: Contains enumeration definitions.
+      - classes: Contains class definitions.
+      - private: Contains private functions.
+      - public: Contains public functions.
+
+    After writing the .psm1 file, the script automatically generates a module 
+    manifest (.psd1) using New-ModuleManifest.
 .PARAMETER ModuleName
     The name of the module. The output folder will be named after the module, and the module
     files will be named as <ModuleName>.psm1 and <ModuleName>.psd1. Default is 'VMware.Lifecycle'.

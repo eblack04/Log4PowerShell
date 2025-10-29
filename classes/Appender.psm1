@@ -21,13 +21,13 @@ class Appender {
 
     [LogLevel]$level
 
-    [string]$pattern
+    [string]$datePattern
 
     Appender([object]$config) {
         if($config) {
             if($config.name) { $this.name = $config.name} else { throw "No name specified in the configuration"}
             if($config.level) { $this.level = [LogLevel]$config.level} else { throw "No log level specified in the configuration"}
-            if($config.pattern) { $this.pattern = $config.pattern} else { throw "No pattern specified in the configuration"}
+            if($config.datePattern) { $this.datePattern = $config.pattern} else { throw "No date pattern specified in the configuration"}
         } else {
             throw "Appender configuration not specified"
         }
@@ -53,13 +53,11 @@ class Appender {
     .SYNOPSIS
         Returns the logging pattern of the appender.
     #>
-    [string] GetPattern() {
-        return $this.pattern
+    [string] GetDatePattern() {
+        return $this.datePattern
     }
 
     [void] LogMessage([string]$message) {
-        if ($message.level -ge $this.level) {
-            Write-Host "Appender::LogMessage:  $message"
-        }
+        Write-Host "Appender::LogMessage:  $message"
     }
 }
