@@ -1,6 +1,9 @@
 $stringArray1 = @("string1", "string2", "string3")
 $stringArray2 = @("string4", "string5", "string6")
 
+$stringArray3 = $stringArray1 + $stringArray2
+Write-Host "stringArray3.Count: $($stringArray3.Count)"
+
 $arrayLength1 = ($stringArray1 | Measure-Object -Property Length -Sum).Sum
 Write-Host "arrayLength1:  $arrayLength1"
 

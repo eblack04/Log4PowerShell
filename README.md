@@ -4,6 +4,5 @@
 
 ### Classes
 
-* Parameters to class methods are in Camel Case.
-* Attributes in classes are in Camel Case.
-* Method names are in Camel Case.
+#### Naming Conventions
+Class names, property names, and method names follow PascalCase (e.g., MyClass, MyProperty, MyMethod).

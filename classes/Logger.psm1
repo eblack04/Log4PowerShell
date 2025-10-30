@@ -32,19 +32,19 @@ class Logger {
         }
 
         foreach ($appenderConfig in $loggingConfig.appenders) {
-            Write-Host "Appender: $($appenderConfig.Name)"
+            #Write-Host "Appender: $($appenderConfig.Name)"
 
-            $className = "$($appenderConfig.type)Appender"
-            $appender = New-Object -TypeName $className -ArgumentList $appenderConfig
-            $loggingThread = [LoggingThread]::new($appender)
-            if ($appenderConfig.batchConfig) {
-                $loggingThread.isBatched = $true
-                if ($appenderConfig.batchConfig.maxRetryAttempts) { $loggingThread.BatchInterval = $appenderConfig.batchConfig.maxRetryAttempts }
-                if ($appenderConfig.batchConfig.batchInterval) { $loggingThread.BatchInterval = $appenderConfig.batchConfig.batchInterval }
-                if ($appenderConfig.batchConfig.maxBatchSize) { $loggingThread.MaxBatchSize = $appenderConfig.batchConfig.maxBatchSize }
-                if ($appenderConfig.batchConfig.maxMessageLength) { $loggingThread.MaxMessageLength = $appenderConfig.batchConfig.maxMessageLength }
-                if ($appenderConfig.batchConfig.retryInterval) { $loggingThread.RetryInterval = $appenderConfig.batchConfig.retryInterval }
-            }
+            #$className = "$($appenderConfig.type)Appender"
+            #$appender = New-Object -TypeName $className -ArgumentList $appenderConfig
+            $loggingThread = [LoggingThread]::new($appenderConfig)
+            #if ($appenderConfig.batchConfig) {
+            #    $loggingThread.isBatched = $true
+            #    if ($appenderConfig.batchConfig.maxRetryAttempts) { $loggingThread.BatchInterval = $appenderConfig.batchConfig.maxRetryAttempts }
+            #    if ($appenderConfig.batchConfig.batchInterval) { $loggingThread.BatchInterval = $appenderConfig.batchConfig.batchInterval }
+            #    if ($appenderConfig.batchConfig.maxBatchSize) { $loggingThread.MaxBatchSize = $appenderConfig.batchConfig.maxBatchSize }
+            #    if ($appenderConfig.batchConfig.maxMessageLength) { $loggingThread.MaxMessageLength = $appenderConfig.batchConfig.maxMessageLength }
+            #    if ($appenderConfig.batchConfig.retryInterval) { $loggingThread.RetryInterval = $appenderConfig.batchConfig.retryInterval }
+            #}
             $this.loggingThreads += $loggingThread
         }
     }

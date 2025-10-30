@@ -1,6 +1,6 @@
 using module ".\LogMessage.psm1"
 using module ".\Appender.psm1"
-using module ".\ConsoleAppender.psm1"
+using module "..\enums\LogLevel.psm1"
 
 <#
 Each appender will exist within a thread where the thread reads messages off of
@@ -22,6 +22,10 @@ class LoggingThread {
 
     [Appender]$Appender
 
+    [string]$DatePattern
+
+    [LogLevel]$LogLevel
+
     [bool]$IsProcessing = $false
 
     [bool]$IsBatched = $false
@@ -38,25 +42,32 @@ class LoggingThread {
 
     [datetime]$LastSendTime
 
-    LoggingThread([Appender]$Appender) {
-        if(!$Appender) {
-            throw "No appender specified"
+    LoggingThread([object]$AppenderConfig) {
+        if(!$AppenderConfig) {
+            throw "No appender configuration specified"
         }
 
-        $this.Appender = $Appender
+        if($AppenderConfig.type) { 
+            $this.Appender = New-Object -TypeName "$($AppenderConfig.type)Appender" -ArgumentList $AppenderConfig 
+        } else {
+            throw "No appender class name specified in the configuration"
+        }
+        if($AppenderConfig.level) { $this.LogLevel = [LogLevel]$AppenderConfig.level} else { throw "No log level specified in the configuration"}
+        if($AppenderConfig.datePattern) { $this.DatePattern = $AppenderConfig.pattern} else { throw "No date pattern specified in the configuration"}
+
+        # If batching configuration is specified in the configuration, then set 
+        # the batching parameters if they're present.
+        if ($appenderConfig.batchConfig) {
+            $this.IsBatched = $true
+            if ($AppenderConfig.batchConfig.maxRetryAttempts) { $this.BatchInterval = $AppenderConfig.batchConfig.maxRetryAttempts }
+            if ($AppenderConfig.batchConfig.batchInterval) { $this.BatchInterval = $AppenderConfig.batchConfig.batchInterval }
+            if ($AppenderConfig.batchConfig.maxBatchSize) { $this.MaxBatchSize = $AppenderConfig.batchConfig.maxBatchSize }
+            if ($AppenderConfig.batchConfig.maxMessageLength) { $this.MaxMessageLength = $AppenderConfig.batchConfig.maxMessageLength }
+            if ($AppenderConfig.batchConfig.retryInterval) { $this.RetryInterval = $AppenderConfig.batchConfig.retryInterval }
+        }
 
         # Initialize the queues.
         $this.LogQueue = [System.Collections.Concurrent.ConcurrentQueue[LogMessage]]::new()
-
-        # The log messages currently pulled off of the log queue will 
-        # temporarily be stored in this new concurrent queue.  For non-batched
-        # appenders, this queue will then be drained of its messages, and the 
-        # messages sent to all appenders.  For a batched appender, the messages 
-        # will remain in this queue until the batched message sending parameters
-        # are met.
-        if ($this.IsBatched) {
-            $this.BatchQueue = [System.Collections.Concurrent.ConcurrentQueue[LogMessage]]::new()
-        }
     }
 
     [void]Start() {
@@ -77,7 +88,7 @@ class LoggingThread {
                     Add-Content -Path $logFile -Value "1"
                     
                     # Pull the log messages off the main log queue, and store
-                    # them in the temporary, batching queue.
+                    # them in a temporary array.
                     $logMessages = @()
                     while ($LoggingThread.LogQueue.TryDequeue([ref]$logMessageRef)) {
                         Add-Content -Path $logFile -Value "log message: $($logMessageRef.GetMessage())"
@@ -115,11 +126,16 @@ class LoggingThread {
                         if ($batchedLogMessagesLength -ge $LoggingThread.MaxMessageLength -or
                             ((Get-Date) - $lastSendTime).TotalSeconds -ge $LoggingThread.BatchInterval -or
                             $batchedLogMessages.Count -ge $LoggingThread.MaxBatchSize) {
+                            
+                            $formattedBatchedMessage = ""
+
                             foreach ($batchedLogMessage in $batchedLogMessages) {
                                 Add-Content -Path $logFile -Value "Sending message:  $batchedLogMessage"
-                                $LoggingThread.Appender.LogMessage($batchedLogMessage)
+                                $formattedBatchedMessage += "$(Get-Date -Format $this.datePattern): $batchedLogMessage`n"
                             }
-                            $batchedLogMessage = ""
+
+                            $LoggingThread.Appender.LogMessage($formattedBatchedMessage)
+                            $batchedLogMessages = @()
                             $lastSendTime = Get-Date
                         }
                     } else {
@@ -127,13 +143,14 @@ class LoggingThread {
                         # batching thread, then pull the messages out of the
                         # batch queue, and distribute them to the appenders.
                         Add-Content -Path $logFile -Value "3"
-                        foreach ($logMessage in $LoggingThread.BatchQueue) {
+                        foreach ($logMessage in $logMessages) {
                             Add-Content -Path $logFile -Value "4"
                             $Appender.LogMessage($logMessage)
                         }
                     }
                 } catch {
                     $errorMessage = "ERROR | Log processing error: $($_.Exception.Message)"
+                    Add-Content -Path $logFile -Value "Error: $errorMessage"
                     Write-Error $errorMessage -ForegroundColor Red
                 }
 
@@ -149,7 +166,7 @@ class LoggingThread {
     }
 
     [void]LogMessage([LogMessage]$logMessage) {
-        if ($logMessage.GetLevel() -le $this.appender.GetLevel()) {
+        if ($logMessage.GetLevel() -le $this.LogLevel) {
             $this.logQueue.Enqueue($logMessage)
             #Receive-Job -Job $this.job
         }

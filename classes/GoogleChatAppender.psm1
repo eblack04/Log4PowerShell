@@ -11,28 +11,29 @@ class GoogleChatAppender : Appender {
 
     [int]$retryInterval = 10
 
+    [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\google-chat.jog"
+
     GoogleChatAppender([object]$config) : base($config) {
+        Add-Content -Path $this.logFile -Value "Web Hook URL:  $($config.webhookUrl)"
         $this.webhookUrl = $config.webhookUrl
     }
 
-    [void] WriteLog([string]$message) {
-        $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        $logEntry = "$timestamp - $message"
+    [void] LogMessage([string]$message) {
         
-        $this.isProcessing = $true
-
+        Add-Content -Path $this.logFile -Value "message:  $message"
         $retryCount = 0
         $success = $false
         $lastError = $null
 
-        try {
+        #try {
+            Add-Content -Path $this.logFile -Value "retryCount: $retryCount, maxRetryAttempts: $($this.maxRetryAttempts), success: $success"
             while ($retryCount -lt $this.maxRetryAttempts -and -not $success) {
                 try {
                     # Create the Google Chat message payload
                     $chatMessage = @{
-                        text = "$logEntry"
+                        text = "$message"
                     }
-
+                    Add-Content -Path $this.logFile -Value "message: $message"
                     # Send to Google Chat webhook
                     $headers = @{
                         "Content-Type" = "application/json"
@@ -47,13 +48,13 @@ class GoogleChatAppender : Appender {
                     
                     # If we get here, the request was successful
                     $success = $true
-                    $this.lastSendTime = Get-Date
                     
                     # Log success if we had previous failures
                     if ($retryCount -gt 0) {
                         Write-Verbose "googleChatLogger ($($this.logName)): Successfully sent message after $retryCount retries."
                     }
                 } catch {
+                    Add-Content -Path $this.logFile -Value "Error: $($_.Exception.Message)"
                     $lastError = $_
                     $retryCount++
 
@@ -63,13 +64,12 @@ class GoogleChatAppender : Appender {
                         Start-Sleep -Seconds $waitTime
                     } else {
                         Write-Error "googleChatLogger ($($this.name)): Failed to send message batch after $($this.maxRetryAttempts) attempts. Final error: $($_.Exception.Message)"
-                        $this.lastSendTime = Get-Date
                     }
                 }
             }
-        } finally {
-            $this.isProcessing = $false
-        }
+        #} finally {
+        #    $this.isProcessing = $false
+        #}
     }
 
     [void] WriteError([string]$message) {

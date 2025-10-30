@@ -22,9 +22,7 @@ class FileAppender : Appender {
     }
 
     [void] LogMessage([string]$message) {
-        $timestamp = Get-Date -Format $this.pattern
-        $logEntry = "$timestamp - $message"
-        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog:  $logEntry"
-        Add-Content -Path $this.logFilePath -Value $logEntry
+        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog:  $message"
+        Add-Content -Path $this.logFilePath -Value $message
     }
 }
