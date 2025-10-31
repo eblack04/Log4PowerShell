@@ -5,17 +5,20 @@ using module "..\enums\LogLevel.psm1"
 [NoRunspaceAffinity()]
 class GoogleChatAppender : Appender {
 
-    [string]$webhookUrl
+    [string]$WebhookUrl
 
-    [int]$maxRetryAttempts = 10
+    [int]$MaxRetryAttempts = 10
 
-    [int]$retryInterval = 10
+    [int]$RetryInterval = 10
 
-    [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\google-chat.jog"
+    [string]$LogFile = "C:\Users\EdwardBlackwell\Documents\logs\google-chat.jog"
 
-    GoogleChatAppender([object]$config) : base($config) {
+    GoogleChatAppender([object]$Config) : base($Config) {
         Add-Content -Path $this.logFile -Value "Web Hook URL:  $($config.webhookUrl)"
-        $this.webhookUrl = $config.webhookUrl
+
+        if ($Config.webhookUrl) { $this.WebhookUrl = $Config.webhookUrl } else { throw "No webhook URL specified within the appender configuration"}
+        if ($Config.maxRetryAttempts) { $this.MaxRetryAttempts = $Config.maxRetryAttempts }
+        if ($Config.retryInterval) { $this.RetryInterval = $Config.retryInterval }
     }
 
     [void] LogMessage([string]$message) {
@@ -26,8 +29,8 @@ class GoogleChatAppender : Appender {
         $lastError = $null
 
         #try {
-            Add-Content -Path $this.logFile -Value "retryCount: $retryCount, maxRetryAttempts: $($this.maxRetryAttempts), success: $success"
-            while ($retryCount -lt $this.maxRetryAttempts -and -not $success) {
+            Add-Content -Path $this.logFile -Value "retryCount: $retryCount, maxRetryAttempts: $($this.MaxRetryAttempts), success: $success"
+            while ($retryCount -lt $this.MaxRetryAttempts -and -not $success) {
                 try {
                     # Create the Google Chat message payload
                     $chatMessage = @{
@@ -58,12 +61,12 @@ class GoogleChatAppender : Appender {
                     $lastError = $_
                     $retryCount++
 
-                    if ($retryCount -lt $this.maxRetryAttempts) {
-                        $waitTime = $this.retryInterval * $retryCount
-                        Write-Warning "googleChatLogger ($($this.name)): Failed to send message batch (attempt $retryCount/$($this.maxRetryAttempts)). Retrying in $waitTime seconds. Error: $($_.Exception.Message)"
+                    if ($retryCount -lt $this.MaxRetryAttempts) {
+                        $waitTime = $this.RetryInterval * $retryCount
+                        Write-Warning "googleChatLogger ($($this.name)): Failed to send message batch (attempt $retryCount/$($this.MaxRetryAttempts)). Retrying in $waitTime seconds. Error: $($_.Exception.Message)"
                         Start-Sleep -Seconds $waitTime
                     } else {
-                        Write-Error "googleChatLogger ($($this.name)): Failed to send message batch after $($this.maxRetryAttempts) attempts. Final error: $($_.Exception.Message)"
+                        Write-Error "googleChatLogger ($($this.name)): Failed to send message batch after $($this.MaxRetryAttempts) attempts. Final error: $($_.Exception.Message)"
                     }
                 }
             }

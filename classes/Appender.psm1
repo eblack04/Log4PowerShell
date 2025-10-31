@@ -4,24 +4,35 @@ using module "..\enums\LogLevel.psm1"
 <#
 .SYNOPSIS
     The base class for all logging appenders.  
-
 .DESCRIPTION
     Appenders are the construct that stores or sends a logging statement to a 
     storage mechanism or service.  Implementations of this class provide a
-    specific technique for storing or sending a logging message, suchs as to a
-    file, or to the console.
-
+    specific technique for storing or sending a logging message, such as to a
+    file, to a database, or to a web service.
 .NOTES
     Author: Todd Blackwell
 #>
 [NoRunspaceAffinity()]
 class Appender {
 
-    [string]$name
+    # The name of the appender.
+    [string]$Name
 
-    Appender([object]$config) {
-        if($config) {
-            if($config.name) { $this.name = $config.name} else { throw "No name specified in the configuration"}
+    <#
+    .SYNOPSIS
+        The default constructor for the appender.
+    .DESCRIPTION
+        Creates an appender instance with the specified name in the provided
+        configuration object.
+    .EXAMPLE
+        $config = @{
+            "name" = "appender1"
+        }
+        $appender = [Appender]::New($config)
+    #>
+    Appender([object]$Config) {
+        if($Config) {
+            if($Config.name) { $this.Name = $Config.name} else { throw "No name specified in the configuration"}
         } else {
             throw "Appender configuration not specified"
         }
@@ -35,6 +46,13 @@ class Appender {
         return $this.Name
     }
 
+    <#
+    .SYNOPSIS
+        The base version of the method that will log a given message.
+    .DESCRIPTION
+        This method is not intended for use.  Derived Appender classes need to
+        override this method to provide a specific implementation. 
+    #>
     [void] LogMessage([string]$message) {
         Write-Host "Appender::LogMessage:  $message"
     }

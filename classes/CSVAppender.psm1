@@ -3,13 +3,13 @@ using module ".\LogMessage.psm1"
 using module "..\enums\LogLevel.psm1"
 
 [NoRunspaceAffinity()]
-class FileAppender : Appender {
+class CSVAppender : Appender {
     
     [string]$logFilePath
 
-    [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\file-appender.log"
+    [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\csv-appender.log"
 
-    FileAppender([object]$config) : base($config) {
+    CSVAppender([object]$config) : base($config) {
         $this.logFilePath = $config.path + "/" + $config.fileName
 
         # Delete the log file if the logger is not appending to an existing log

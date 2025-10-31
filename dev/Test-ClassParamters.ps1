@@ -45,3 +45,6 @@ Write-Host "$($album1.GetName()): by $($album1.GetBand()), from year $($album1.G
 $album2 = [Album]::new("Screaming for Vengeance", "Judas Priest", "1982")
 Write-Host "$($album2.GetName()): by $($album2.GetBand()), from year $($album2.GetYear())"
 $album2.WriteParameter()
+
+Write-Host "Album 1 band from parameter:  $($album1.band)"
+Write-Host "Album 1 band from method call:  $($album1.GetBand())"

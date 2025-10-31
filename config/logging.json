@@ -9,14 +9,22 @@
 			"name"             : "googleChat1",
 			"webhookUrl"       : "https://chat.googleapis.com/v1/spaces/AAQA_2CyzVs/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=B4hawzNnqxiS_E5vpvFgZ0l5TlXFND6KGvTv5BEV2PQ",
 			"datePattern"      : "yyyy-MM-dd HH:mm:ss.fff",
-			"level"            : "DEBUG",
+			"logLevel"            : "DEBUG",
+			"maxRetryAttempts" : 10,
+			"retryInterval"    : 10,
 			"batchConfig"      : {
-				"maxRetryAttempts" : 10,
 				"batchInterval"    : 5,
 				"maxBatchSize"     : 50,
-				"maxMessageLength" : 500,
-				"retryInterval"    : 10
+				"maxMessageLength" : 500
 			}
+		}, {
+			"type"             : "CSV",
+			"name"             : "csv1",
+			"datePattern"      : "yyyy-MM-dd HH:mm:ss.fff",
+			"headers"		   : "vcenter,datacenter,cluster,host,vm",
+			"path"             : "C:/Users/EdwardBlackwell/Documents/logs",
+			"fileName"         : "csv-log.log",
+			"logLevel"         : "DEBUG"
 		}
 	]
 }
