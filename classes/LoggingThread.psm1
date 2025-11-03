@@ -92,6 +92,12 @@ class LoggingThread {
         $this.LogQueue = [System.Collections.Concurrent.ConcurrentQueue[LogMessage]]::new()
     }
 
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
     [void]Start() {
 
         $this.job = Start-ThreadJob -Name $this.appender.Name -ScriptBlock {
@@ -102,7 +108,7 @@ class LoggingThread {
 
             $batchedLogMessages = @()
 
-            [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\threadJob.jog"
+            [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\threadJob-$($LoggingThread.Appender.Name).log"
 
             while ($true) {
                 try {
@@ -114,16 +120,16 @@ class LoggingThread {
                     $logMessages = @()
                     while ($LoggingThread.LogQueue.TryDequeue([ref]$logMessageRef)) {
                         Add-Content -Path $logFile -Value "log message: $($logMessageRef.GetMessage())"
-                        $logMessages += $logMessageRef.GetMessage()
+                        $logMessages += $logMessageRef
                     }
-                    Add-Content -Path $logFile -Value "2"
+                    Add-Content -Path $logFile -Value "Messages dequeued: $($logMessages.Count)"
 
                     if ($LoggingThread.IsBatched) {
                         # Add the current messages to the current batch of 
                         # messages.  
                         $batchedLogMessages += $logMessages
 
-                        $batchedLogMessagesLength = ($batchedLogMessages | Measure-Object -Property Length -Sum).Sum
+                        $batchedLogMessagesLength = ($batchedLogMessages | Measure-Object -Property MessageLength -Sum).Sum
 
                         Add-Content -Path $logFile -Value "batchedLogMessagesLength: $($batchedLogMessagesLength)"
                         Add-Content -Path $logFile -Value "LoggingThread.MaxMessageLength: $($LoggingThread.MaxMessageLength)"
@@ -151,13 +157,10 @@ class LoggingThread {
                             ((Get-Date) - $lastSendTime).TotalSeconds -ge $LoggingThread.BatchInterval -or
                             $batchedLogMessages.Count -ge $LoggingThread.MaxBatchSize) {
 
-                            $formattedBatchedMessage = ""
-                            foreach ($batchedLogMessage in $batchedLogMessages) {
-                                Add-Content -Path $logFile -Value "Sending message:  $batchedLogMessage"
-                                $formattedBatchedMessage += "$(Get-Date -Format $this.datePattern): $batchedLogMessage`n"
-                            }
+                            $LoggingThread.Appender.LogMessages($batchedLogMessages)
 
-                            $LoggingThread.Appender.LogMessage($formattedBatchedMessage)
+                            # Reset the batched log messages array, and set the
+                            # timestamp for the last time a message was sent.
                             $batchedLogMessages = @()
                             $lastSendTime = Get-Date
                         }
@@ -166,10 +169,10 @@ class LoggingThread {
                         # batching thread, then pull the messages out of the
                         # batch queue, and distribute them directly to the 
                         # appenders.
-                        Add-Content -Path $logFile -Value "3"
+                        Add-Content -Path $logFile -Value "The messages are not batched"
                         foreach ($logMessage in $logMessages) {
-                            Add-Content -Path $logFile -Value "4"
-                            $Appender.LogMessage($logMessage)
+                            Add-Content -Path $logFile -Value "Non-batched message:  $($logMessage.GetMessage()), sending to appender $($LoggingThread.Appender.Name)"
+                            $LoggingThread.Appender.LogMessage($logMessage)
                         }
                     }
                 } catch {
@@ -185,16 +188,24 @@ class LoggingThread {
         Write-Host "Job type:  $($this.job.GetType())"
     }
 
-    [bool]IsIdle() {
-        return $true
-    }
-
-    [void]LogMessage([LogMessage]$logMessage) {
-        if ($logMessage.GetLevel() -le $this.LogLevel) {
-            $this.logQueue.Enqueue($logMessage)
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
+    [void]LogMessage([LogMessage]$LogMessage) {
+        if ($LogMessage.GetLogLevel() -le $this.LogLevel) {
+            $this.logQueue.Enqueue($LogMessage)
         }
     }
 
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
     [void]Stop() {
         Write-Host "LoggingThread::Stop:  $($this.job.Name)"
         Stop-Job -Job $this.job 

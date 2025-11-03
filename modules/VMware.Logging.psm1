@@ -1,7 +1,7 @@
 # ====================================================================================
 # Module: VMware.Logging
 # Version: 1.0
-# Generated: 10-30-2025 14:18:11
+# Generated: 11-03-2025 11:54:33
 # Description: Module for managing vSphere Lifecycle
 # ====================================================================================
 # -------------------------------------------------------------------------
@@ -25,6 +25,8 @@ class Appender {
     # The name of the appender.
     [string]$Name
 
+    [string]$DatePattern
+
     <#
     .SYNOPSIS
         The default constructor for the appender.
@@ -40,6 +42,7 @@ class Appender {
     Appender([object]$Config) {
         if($Config) {
             if($Config.name) { $this.Name = $Config.name} else { throw "No name specified in the configuration"}
+            if($Config.datePattern) { $this.DatePattern = $Config.datePattern} else { throw "No date pattern specified in the configuration"}
         } else {
             throw "Appender configuration not specified"
         }
@@ -60,13 +63,93 @@ class Appender {
         This method is not intended for use.  Derived Appender classes need to
         override this method to provide a specific implementation. 
     #>
-    [void] LogMessage([string]$message) {
-        Write-Host "Appender::LogMessage:  $message"
+    [void] LogMessage([LogMessage]$LogMessage) {
+        Write-Host "Appender::LogMessage:  $($LogMessage.GetTimestamp().ToString($this.DatePattern)) - $($LogMessage.GetMessage())"
+    }
+
+    [void] LogMessages([LogMessage[]]$LogMessages) {
+        $batchMessage = ""
+
+        foreach($logMessage in $LogMessages) {
+            $batchMessage += $($logMessage.GetTimestamp().ToString($this.DatePattern)) - $($logMessage.GetMessage()) + "`n"
+        }
+        Write-Host "$batchMessage"
     }
 }
 
 # -------------------------------------------------------------------------
 # End: Class Definition - Appender
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Start: Class Definition - CSVAppender
+# -------------------------------------------------------------------------
+
+[NoRunspaceAffinity()]
+class CSVAppender : Appender {
+    
+    [string]$LogFilePath
+
+    [string[]]$Headers
+
+    [bool]$ValuesMandatory = $false
+
+    [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\csv-appender.log"
+
+    CSVAppender([object]$config) : base($config) {
+        $this.LogFilePath = $config.path + "/" + $config.fileName
+
+        # Delete the log file if the logger is not appending to an existing log
+        # file.
+        if (!$config.append -and (Test-Path -Path $this.logFilePath -PathType Leaf)) {
+            Remove-Item -Path $this.logFilePath
+        }
+
+        $this.Headers = $config.headers.Split(",")
+        $this.ValuesMandatory = $config.valuesMandatory
+        Add-Content -Path $this.LogFilePath -Value $config.headers
+
+        Add-Content -Path $this.logFile -Value "Set logFilePath to:  $($this.logFilePath)"
+    }
+
+    [void] LogMessage([LogMessage]$LogMessage) {
+        Add-Content -Path $this.logFile -Value "CSVAppender::LogMessage.GetMessage():  $($LogMessage.GetMessage()))"
+
+        $containsAllKeys = $true
+        $messageValues = @()
+
+        # This 'for' loop retrieves all the values for each column in the CSV
+        # file.  If any of the column values are missing, then the log entry is
+        # skipped.
+        foreach ($header in $this.Headers) {
+            $messageValue = $LogMessage.GetMessageHash()[$header]
+
+            if ($messageValue) {
+                $messageValues += $messageValue
+            } else {
+                $messageValues += ""
+                $containsAllKeys = $false
+            }
+        }
+
+        if (($containsAllKeys -and $this.ValuesMandatory) -or (-not $this.ValuesMandatory)) {
+            $csvMessage = $messageValues -Join ","
+            Add-Content -Path $this.logFile -Value "CSVAppender::LogMessage:  $csvMessage)"
+
+            # After processing all the properties, just returned the array as a 
+            # joined string.
+            Add-Content -Path $this.logFilePath -Value $csvMessage
+        }
+    }
+
+    [void] LogMessages([LogMessage[]]$LogMessages) {
+        foreach ($logMessage in $LogMessages) {
+            $this.LogMessage($logMessage)
+        }
+    }
+}
+
+# -------------------------------------------------------------------------
+# End: Class Definition - CSVAppender
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
 # Start: Class Definition - FileAppender
@@ -75,25 +158,32 @@ class Appender {
 [NoRunspaceAffinity()]
 class FileAppender : Appender {
     
-    [string]$logFilePath
+    [string]$LogFilePath
 
     [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\file-appender.log"
 
     FileAppender([object]$config) : base($config) {
-        $this.logFilePath = $config.path + "/" + $config.fileName
+        $this.LogFilePath = $config.path + "/" + $config.fileName
 
         # Delete the log file if the logger is not appending to an existing log
         # file.
-        if (!$config.append -and (Test-Path -Path $this.logFilePath -PathType Leaf)) {
-            Remove-Item -Path $this.logFilePath
+        if (!$config.append -and (Test-Path -Path $this.LogFilePath -PathType Leaf)) {
+            Remove-Item -Path $this.LogFilePath
         }
 
-        Add-Content -Path $this.logFile -Value "Set logFilePath to:  $($this.logFilePath)"
+        Add-Content -Path $this.logFile -Value "Set LogFilePath to:  $($this.LogFilePath)"
     }
 
-    [void] LogMessage([string]$message) {
-        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog:  $message"
-        Add-Content -Path $this.logFilePath -Value $message
+    [void] LogMessage([LogMessage]$LogMessage) {
+        $formattedMessage = "$($LogMessage.GetTimestamp().ToString($this.DatePattern)): $($LogMessage.GetMessage())"
+        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog:  $formattedMessage"
+        Add-Content -Path $this.LogFilePath -Value $formattedMessage
+    }
+
+    [void] LogMessages([LogMessage[]]$LogMessages) {
+        foreach ($LogMessage in $LogMessages) {
+            $this.LogMessage($LogMessage)
+        }
     }
 }
 
@@ -123,63 +213,69 @@ class GoogleChatAppender : Appender {
         if ($Config.retryInterval) { $this.RetryInterval = $Config.retryInterval }
     }
 
-    [void] LogMessage([string]$message) {
-        
-        Add-Content -Path $this.logFile -Value "message:  $message"
+    [void] LogMessage([LogMessage]$LogMessage) {
+        Add-Content -Path $this.logFile -Value "LogMessage:  $($LogMessage.GetMessage())"
+
+        # Create the Google Chat message payload
+        $formattedMessage = "$($LogMessage.GetTimestamp().ToString($this.DatePattern)) - $($LogMessage.GetMessage())"
+        $this.SendMessage($formattedMessage)
+    }
+
+    [void] LogMessages([LogMessage[]]$LogMessages) {
+        $batchFormattedMessage = ""
+
+        foreach($LogMessage in $LogMessages) {
+            $batchFormattedMessage += "$($LogMessage.GetTimestamp().ToString($this.DatePattern)) - $($LogMessage.GetMessage())`n"
+        }
+
+        $this.SendMessage($batchFormattedMessage)
+    }
+
+    hidden [void] SendMessage([string]$Message) {
         $retryCount = 0
         $success = $false
         $lastError = $null
 
-        #try {
-            Add-Content -Path $this.logFile -Value "retryCount: $retryCount, maxRetryAttempts: $($this.MaxRetryAttempts), success: $success"
-            while ($retryCount -lt $this.MaxRetryAttempts -and -not $success) {
-                try {
-                    # Create the Google Chat message payload
-                    $chatMessage = @{
-                        text = "$message"
-                    }
-                    Add-Content -Path $this.logFile -Value "message: $message"
-                    # Send to Google Chat webhook
-                    $headers = @{
-                        "Content-Type" = "application/json"
-                    }
+        while ($retryCount -lt $this.MaxRetryAttempts -and -not $success) {
+            try {
+                # Create the Google Chat message payload
+                $chatMessage = @{
+                    text = $Message
+                }
+                Add-Content -Path $this.logFile -Value "Message: $Message"
+                # Send to Google Chat webhook
+                $headers = @{
+                    "Content-Type" = "application/json"
+                }
 
-                    $body = $chatMessage | ConvertTo-Json -Compress
+                $body = $chatMessage | ConvertTo-Json -Compress
                     
-                    # Add a small random delay to prevent rate limiting
-                    Start-Sleep -Seconds (Get-Random -Minimum 1 -Maximum 5)
+                # Add a small random delay to prevent rate limiting
+                Start-Sleep -Seconds (Get-Random -Minimum 1 -Maximum 5)
                     
-                    $response = Invoke-RestMethod -Uri $this.webhookUrl -Method Post -Headers $headers -Body $body -ErrorAction Stop
+                $response = Invoke-RestMethod -Uri $this.webhookUrl -Method Post -Headers $headers -Body $body -ErrorAction Stop
                     
-                    # If we get here, the request was successful
-                    $success = $true
+                # If we get here, the request was successful
+                $success = $true
                     
-                    # Log success if we had previous failures
-                    if ($retryCount -gt 0) {
-                        Write-Verbose "googleChatLogger ($($this.logName)): Successfully sent message after $retryCount retries."
-                    }
-                } catch {
-                    Add-Content -Path $this.logFile -Value "Error: $($_.Exception.Message)"
-                    $lastError = $_
-                    $retryCount++
+                # Log success if we had previous failures
+                if ($retryCount -gt 0) {
+                    Write-Verbose "googleChatLogger ($($this.logName)): Successfully sent message after $retryCount retries."
+                }
+            } catch {
+                Add-Content -Path $this.logFile -Value "Error: $($_.Exception.Message)"
+                $lastError = $_
+                $retryCount++
 
-                    if ($retryCount -lt $this.MaxRetryAttempts) {
-                        $waitTime = $this.RetryInterval * $retryCount
-                        Write-Warning "googleChatLogger ($($this.name)): Failed to send message batch (attempt $retryCount/$($this.MaxRetryAttempts)). Retrying in $waitTime seconds. Error: $($_.Exception.Message)"
-                        Start-Sleep -Seconds $waitTime
-                    } else {
-                        Write-Error "googleChatLogger ($($this.name)): Failed to send message batch after $($this.MaxRetryAttempts) attempts. Final error: $($_.Exception.Message)"
-                    }
+                if ($retryCount -lt $this.MaxRetryAttempts) {
+                    $waitTime = $this.RetryInterval * $retryCount
+                    Write-Warning "googleChatLogger ($($this.name)): Failed to send message batch (attempt $retryCount/$($this.MaxRetryAttempts)). Retrying in $waitTime seconds. Error: $($_.Exception.Message)"
+                    Start-Sleep -Seconds $waitTime
+                } else {
+                    Write-Error "googleChatLogger ($($this.name)): Failed to send message batch after $($this.MaxRetryAttempts) attempts. Final error: $($_.Exception.Message)"
                 }
             }
-        #} finally {
-        #    $this.isProcessing = $false
-        #}
-    }
-
-    [void] WriteError([string]$message) {
-        $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        $logEntry = "$timestamp - ERROR: $message"
+        }
     }
 }
 
@@ -214,7 +310,7 @@ class Logger {
         
         if ($loggingConfig.console.enabled) {
             $this.consoleEnabled = $true
-            if ($loggingConfig.console.level) { $this.consoleLevel = [LogLevel]$loggingConfig.console.level }
+            if ($loggingConfig.console.logLevel) { $this.consoleLevel = [LogLevel]$loggingConfig.console.logLevel }
             if ($loggingConfig.console.datePattern) { $this.consoleDatePattern = [string]$loggingConfig.console.datePattern }
         }
 
@@ -227,12 +323,12 @@ class Logger {
     #===========================================================================
     # Method to add an appender instance.
     #===========================================================================
-    [void] AddAppender([Appender]$appender) {
-        if(!$appender) {
+    [void] AddAppender([Appender]$Appender) {
+        if(!$Appender) {
             throw "No appender specified"
         }
 
-        $loggingThread = [LoggingThread]::new($appender)
+        $loggingThread = [LoggingThread]::new($Appender)
         $this.loggingThreads += $loggingThread
     }
 
@@ -248,19 +344,19 @@ class Logger {
     #===========================================================================
     #
     #===========================================================================
-    [void] LogMessage([LogMessage]$logMessage) {
-        if(!$logMessage) {
+    [void] LogMessage([LogMessage]$LogMessage) {
+        if(!$LogMessage) {
             throw "No log message specified"
         }
 
         if ($this.consoleEnabled) {
-            if ($logMessage.GetLevel() -le $this.consoleLevel ) {
-                Write-Host "$((Get-Date).ToString($this.consoleDatePattern)) :: $($logMessage.GetMessage())"
+            if ($LogMessage.GetLogLevel() -le $this.consoleLevel ) {
+                Write-Host "$((Get-Date).ToString($this.consoleDatePattern)) :: $($LogMessage.GetMessage())"
             }
         }
 
         foreach ($loggingThread in $this.loggingThreads) {
-            $loggingThread.LogMessage($logMessage)
+            $loggingThread.LogMessage($LogMessage)
         }
     }
 
@@ -299,16 +395,31 @@ class LoggingThread {
     # each individual LoggingThread instance.
     [System.Collections.Concurrent.ConcurrentQueue[LogMessage]]$LogQueue
 
+    # The object that does something with the incoming log messages on the 
+    # LogQueue object.
     [Appender]$Appender
 
+    # The date pattern to use when creating the final log entry from the given
+    # log message.
     [string]$DatePattern
 
+    # The logging level to use when determining of log statements are processed
+    # the Appender object.
     [LogLevel]$LogLevel
 
+    # A boolean flag indicating whether or not log messages are currently being
+    # taken off of the LogQueue object, and sent to the Appender object.
     [bool]$IsProcessing = $false
 
+    # A boolean flag indicating whether or not log messages received by this 
+    # logging thread are batched up first before being sent to the Appender 
+    # object.
     [bool]$IsBatched = $false
 
+    # The amount of time in seconds between batch message sendings.  If batching
+    # is enabled for this logging thread, then log messages are saved up in a 
+    # temporary list, joined together into a single message, and sent to the 
+    # Appender object after this amount of time has passed.
     [int]$BatchInterval = 5
 
     [int]$MaxBatchSize = 50
@@ -319,17 +430,28 @@ class LoggingThread {
 
     [datetime]$LastSendTime
 
+    <#
+    .SYNOPSIS
+        The default constructor for the logging thread class.
+    .DESCRIPTION
+        Uses the given appender configuration ojbect to create an appender 
+        instance and initialize attributes needed by this class.
+    #>
     LoggingThread([object]$AppenderConfig) {
         if(!$AppenderConfig) {
             throw "No appender configuration specified"
         }
 
         if($AppenderConfig.type) { 
-            $this.Appender = New-Object -TypeName "$($AppenderConfig.type)Appender" -ArgumentList $AppenderConfig 
+            try {
+                $this.Appender = New-Object -TypeName "$($AppenderConfig.type)Appender" -ArgumentList $AppenderConfig
+            } catch{
+                throw "Invalid appender type $($AppenderConfig.type)"
+            }
         } else {
             throw "No appender class name specified in the configuration"
         }
-        if($AppenderConfig.level) { $this.LogLevel = [LogLevel]$AppenderConfig.level} else { throw "No log level specified in the configuration"}
+        if($AppenderConfig.logLevel) { $this.LogLevel = [LogLevel]$AppenderConfig.logLevel} else { throw "No log level specified in the configuration"}
         if($AppenderConfig.datePattern) { $this.DatePattern = $AppenderConfig.pattern} else { throw "No date pattern specified in the configuration"}
 
         # If batching configuration is specified in the configuration, then set 
@@ -345,6 +467,12 @@ class LoggingThread {
         $this.LogQueue = [System.Collections.Concurrent.ConcurrentQueue[LogMessage]]::new()
     }
 
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
     [void]Start() {
 
         $this.job = Start-ThreadJob -Name $this.appender.Name -ScriptBlock {
@@ -355,7 +483,7 @@ class LoggingThread {
 
             $batchedLogMessages = @()
 
-            [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\threadJob.jog"
+            [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\threadJob-$($LoggingThread.Appender.Name).log"
 
             while ($true) {
                 try {
@@ -367,16 +495,16 @@ class LoggingThread {
                     $logMessages = @()
                     while ($LoggingThread.LogQueue.TryDequeue([ref]$logMessageRef)) {
                         Add-Content -Path $logFile -Value "log message: $($logMessageRef.GetMessage())"
-                        $logMessages += $logMessageRef.GetMessage()
+                        $logMessages += $logMessageRef
                     }
-                    Add-Content -Path $logFile -Value "2"
+                    Add-Content -Path $logFile -Value "Messages dequeued: $($logMessages.Count)"
 
                     if ($LoggingThread.IsBatched) {
                         # Add the current messages to the current batch of 
                         # messages.  
                         $batchedLogMessages += $logMessages
 
-                        $batchedLogMessagesLength = ($batchedLogMessages | Measure-Object -Property Length -Sum).Sum
+                        $batchedLogMessagesLength = ($batchedLogMessages | Measure-Object -Property MessageLength -Sum).Sum
 
                         Add-Content -Path $logFile -Value "batchedLogMessagesLength: $($batchedLogMessagesLength)"
                         Add-Content -Path $logFile -Value "LoggingThread.MaxMessageLength: $($LoggingThread.MaxMessageLength)"
@@ -388,37 +516,38 @@ class LoggingThread {
                         Add-Content -Path $logFile -Value "LoggingThread.MaxBatchSize: $($LoggingThread.MaxBatchSize)"
                         Add-Content -Path $logFile -Value "$(((Get-Date) - $lastSendTime).TotalSeconds -ge $LoggingThread.BatchInterval)"
 
-                        # The batched messages are sent to the appenders under
+                        #=======================================================
+                        # The batched messages are sent to the appender under
                         # three conditions:
                         #
                         # 1.  The amount of time between batch sendings has 
-                        #     occurred.
+                        #     occurred (BatchInterval).
                         # 2.  The size of the batched message is equal to or
-                        #     greater than the maximum batch message size.
+                        #     greater than the maximum batch message size
+                        #     (MaxMessageLength).
                         # 3.  The number of messages in the batch is equal to 
-                        #     the maximum allowed batch size.
+                        #     the maximum allowed batch size (MaxBatchSize).
+                        #=======================================================
                         if ($batchedLogMessagesLength -ge $LoggingThread.MaxMessageLength -or
                             ((Get-Date) - $lastSendTime).TotalSeconds -ge $LoggingThread.BatchInterval -or
                             $batchedLogMessages.Count -ge $LoggingThread.MaxBatchSize) {
 
-                            $formattedBatchedMessage = ""
-                            foreach ($batchedLogMessage in $batchedLogMessages) {
-                                Add-Content -Path $logFile -Value "Sending message:  $batchedLogMessage"
-                                $formattedBatchedMessage += "$(Get-Date -Format $this.datePattern): $batchedLogMessage`n"
-                            }
+                            $LoggingThread.Appender.LogMessages($batchedLogMessages)
 
-                            $LoggingThread.Appender.LogMessage($formattedBatchedMessage)
+                            # Reset the batched log messages array, and set the
+                            # timestamp for the last time a message was sent.
                             $batchedLogMessages = @()
                             $lastSendTime = Get-Date
                         }
                     } else {
                         # If the logging thread is not configured to be a 
                         # batching thread, then pull the messages out of the
-                        # batch queue, and distribute them to the appenders.
-                        Add-Content -Path $logFile -Value "3"
+                        # batch queue, and distribute them directly to the 
+                        # appenders.
+                        Add-Content -Path $logFile -Value "The messages are not batched"
                         foreach ($logMessage in $logMessages) {
-                            Add-Content -Path $logFile -Value "4"
-                            $Appender.LogMessage($logMessage)
+                            Add-Content -Path $logFile -Value "Non-batched message:  $($logMessage.GetMessage()), sending to appender $($LoggingThread.Appender.Name)"
+                            $LoggingThread.Appender.LogMessage($logMessage)
                         }
                     }
                 } catch {
@@ -434,16 +563,24 @@ class LoggingThread {
         Write-Host "Job type:  $($this.job.GetType())"
     }
 
-    [bool]IsIdle() {
-        return $true
-    }
-
-    [void]LogMessage([LogMessage]$logMessage) {
-        if ($logMessage.GetLevel() -le $this.LogLevel) {
-            $this.logQueue.Enqueue($logMessage)
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
+    [void]LogMessage([LogMessage]$LogMessage) {
+        if ($LogMessage.GetLogLevel() -le $this.LogLevel) {
+            $this.logQueue.Enqueue($LogMessage)
         }
     }
 
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
     [void]Stop() {
         Write-Host "LoggingThread::Stop:  $($this.job.Name)"
         Stop-Job -Job $this.job 
@@ -458,23 +595,138 @@ class LoggingThread {
 # Start: Class Definition - LogMessage
 # -------------------------------------------------------------------------
 
+<#
+.SYNOPSIS
+    Brief description.
+.DESCRIPTION
+    Detailed description.
+#>
 [NoRunspaceAffinity()]
 class LogMessage {
-    hidden [string]$message
+    # The time the message was generated.
+    [datetime]$Timestamp
 
-    hidden [LogLevel]$level
+    # The object used as the body for the message.
+    [object]$MessageHash
 
-    LogMessage([string]$message, [LogLevel]$level) {
-        $this.message = $message
-        $this.level = $level
+    # The logging level for the message.
+    [LogLevel]$LogLevel
+
+    # The number of characters in the message.
+    [int]$MessageLength
+
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
+    LogMessage([string]$Message, [LogLevel]$LogLevel) {
+        if(!$Message) {
+            throw "no message specified"
+        }
+
+        if(!$LogLevel) {
+            throw "no log level specified"
+        }
+
+        $this.Timestamp = Get-Date
+        $this.MessageHash = @{}
+        $this.MessageHash.Message = $Message
+        $this.LogLevel = $LogLevel
+        $this.MessageLength = $Message.Length
     }
 
-    [string] GetMessage() {
-        return $this.message
+    <#
+    .SYNOPSIS
+        A LogMessage constructor that accepts a hash message directly.
+    .DESCRIPTION
+        This constructor accepts a message hash object and the logging level for
+        the message.  The hash object becomes the body of the message, and it is
+        up to the appenders to utilize the hash for logging purposes.
+    #>
+    LogMessage([object]$MessageHash, [LogLevel]$LogLevel) {
+        if(!$MessageHash) {
+            throw "no message hash specified"
+        }
+
+        if(!$LogLevel) {
+            throw "no log level specified"
+        }
+
+        $this.MessageHash = $MessageHash
+        $this.LogLevel = $LogLevel
+        
+        foreach ($property in $this.MessageHash.GetEnumerator()) {
+            $this.MessageLength += $property.Name.Length + $property.Value.Length
+        }
     }
 
-    [LogLevel] GetLevel() {
-        return $this.level
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
+    [string] GetMessage() { 
+        Write-Host "this.MessageHash.Keys.Count:  $($this.MessageHash.Keys.Count)"
+        Write-Host "this.MessageHash.ContainsKey(`"Message`"):  $($this.MessageHash.ContainsKey("Message"))"
+
+        if ($this.MessageHash.Keys.Count -eq 1 -and $this.MessageHash.ContainsKey("Message")) {
+            return $this.MessageHash.Message
+        } else {
+            $messageText = ""
+
+            foreach ($property in $this.MessageHash.GetEnumerator()) {
+                if($messageText.Length -ne 0) {
+                    $messageText += ", "
+                }
+
+                $messageText += $property.Name + " = " + $property.Value
+            }
+
+            return $messageText
+        }
+    }
+
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
+    [PSCustomObject] GetMessageHash() {
+        return $this.MessageHash
+    }
+
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
+    [LogLevel] GetLogLevel() {
+        return $this.LogLevel
+    }
+
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
+    [int] GetMessageLength() {
+        return $this.MessageLength
+    }
+
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
+    [datetime] GetTimestamp() {
+        return $this.Timestamp
     }
 }
 

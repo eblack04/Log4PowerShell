@@ -5,24 +5,31 @@ using module "..\enums\LogLevel.psm1"
 [NoRunspaceAffinity()]
 class FileAppender : Appender {
     
-    [string]$logFilePath
+    [string]$LogFilePath
 
     [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\file-appender.log"
 
     FileAppender([object]$config) : base($config) {
-        $this.logFilePath = $config.path + "/" + $config.fileName
+        $this.LogFilePath = $config.path + "/" + $config.fileName
 
         # Delete the log file if the logger is not appending to an existing log
         # file.
-        if (!$config.append -and (Test-Path -Path $this.logFilePath -PathType Leaf)) {
-            Remove-Item -Path $this.logFilePath
+        if (!$config.append -and (Test-Path -Path $this.LogFilePath -PathType Leaf)) {
+            Remove-Item -Path $this.LogFilePath
         }
 
-        Add-Content -Path $this.logFile -Value "Set logFilePath to:  $($this.logFilePath)"
+        Add-Content -Path $this.logFile -Value "Set LogFilePath to:  $($this.LogFilePath)"
     }
 
-    [void] LogMessage([string]$message) {
-        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog:  $message"
-        Add-Content -Path $this.logFilePath -Value $message
+    [void] LogMessage([LogMessage]$LogMessage) {
+        $formattedMessage = "$($LogMessage.GetTimestamp().ToString($this.DatePattern)): $($LogMessage.GetMessage())"
+        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog:  $formattedMessage"
+        Add-Content -Path $this.LogFilePath -Value $formattedMessage
+    }
+
+    [void] LogMessages([LogMessage[]]$LogMessages) {
+        foreach ($LogMessage in $LogMessages) {
+            $this.LogMessage($LogMessage)
+        }
     }
 }

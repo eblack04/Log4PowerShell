@@ -21,62 +21,68 @@ class GoogleChatAppender : Appender {
         if ($Config.retryInterval) { $this.RetryInterval = $Config.retryInterval }
     }
 
-    [void] LogMessage([string]$message) {
-        
-        Add-Content -Path $this.logFile -Value "message:  $message"
+    [void] LogMessage([LogMessage]$LogMessage) {
+        Add-Content -Path $this.logFile -Value "LogMessage:  $($LogMessage.GetMessage())"
+
+        # Create the Google Chat message payload
+        $formattedMessage = "$($LogMessage.GetTimestamp().ToString($this.DatePattern)) - $($LogMessage.GetMessage())"
+        $this.SendMessage($formattedMessage)
+    }
+
+    [void] LogMessages([LogMessage[]]$LogMessages) {
+        $batchFormattedMessage = ""
+
+        foreach($LogMessage in $LogMessages) {
+            $batchFormattedMessage += "$($LogMessage.GetTimestamp().ToString($this.DatePattern)) - $($LogMessage.GetMessage())`n"
+        }
+
+        $this.SendMessage($batchFormattedMessage)
+    }
+
+    hidden [void] SendMessage([string]$Message) {
         $retryCount = 0
         $success = $false
         $lastError = $null
 
-        #try {
-            Add-Content -Path $this.logFile -Value "retryCount: $retryCount, maxRetryAttempts: $($this.MaxRetryAttempts), success: $success"
-            while ($retryCount -lt $this.MaxRetryAttempts -and -not $success) {
-                try {
-                    # Create the Google Chat message payload
-                    $chatMessage = @{
-                        text = "$message"
-                    }
-                    Add-Content -Path $this.logFile -Value "message: $message"
-                    # Send to Google Chat webhook
-                    $headers = @{
-                        "Content-Type" = "application/json"
-                    }
+        while ($retryCount -lt $this.MaxRetryAttempts -and -not $success) {
+            try {
+                # Create the Google Chat message payload
+                $chatMessage = @{
+                    text = $Message
+                }
+                Add-Content -Path $this.logFile -Value "Message: $Message"
+                # Send to Google Chat webhook
+                $headers = @{
+                    "Content-Type" = "application/json"
+                }
 
-                    $body = $chatMessage | ConvertTo-Json -Compress
+                $body = $chatMessage | ConvertTo-Json -Compress
                     
-                    # Add a small random delay to prevent rate limiting
-                    Start-Sleep -Seconds (Get-Random -Minimum 1 -Maximum 5)
+                # Add a small random delay to prevent rate limiting
+                Start-Sleep -Seconds (Get-Random -Minimum 1 -Maximum 5)
                     
-                    $response = Invoke-RestMethod -Uri $this.webhookUrl -Method Post -Headers $headers -Body $body -ErrorAction Stop
+                $response = Invoke-RestMethod -Uri $this.webhookUrl -Method Post -Headers $headers -Body $body -ErrorAction Stop
                     
-                    # If we get here, the request was successful
-                    $success = $true
+                # If we get here, the request was successful
+                $success = $true
                     
-                    # Log success if we had previous failures
-                    if ($retryCount -gt 0) {
-                        Write-Verbose "googleChatLogger ($($this.logName)): Successfully sent message after $retryCount retries."
-                    }
-                } catch {
-                    Add-Content -Path $this.logFile -Value "Error: $($_.Exception.Message)"
-                    $lastError = $_
-                    $retryCount++
+                # Log success if we had previous failures
+                if ($retryCount -gt 0) {
+                    Write-Verbose "googleChatLogger ($($this.logName)): Successfully sent message after $retryCount retries."
+                }
+            } catch {
+                Add-Content -Path $this.logFile -Value "Error: $($_.Exception.Message)"
+                $lastError = $_
+                $retryCount++
 
-                    if ($retryCount -lt $this.MaxRetryAttempts) {
-                        $waitTime = $this.RetryInterval * $retryCount
-                        Write-Warning "googleChatLogger ($($this.name)): Failed to send message batch (attempt $retryCount/$($this.MaxRetryAttempts)). Retrying in $waitTime seconds. Error: $($_.Exception.Message)"
-                        Start-Sleep -Seconds $waitTime
-                    } else {
-                        Write-Error "googleChatLogger ($($this.name)): Failed to send message batch after $($this.MaxRetryAttempts) attempts. Final error: $($_.Exception.Message)"
-                    }
+                if ($retryCount -lt $this.MaxRetryAttempts) {
+                    $waitTime = $this.RetryInterval * $retryCount
+                    Write-Warning "googleChatLogger ($($this.name)): Failed to send message batch (attempt $retryCount/$($this.MaxRetryAttempts)). Retrying in $waitTime seconds. Error: $($_.Exception.Message)"
+                    Start-Sleep -Seconds $waitTime
+                } else {
+                    Write-Error "googleChatLogger ($($this.name)): Failed to send message batch after $($this.MaxRetryAttempts) attempts. Final error: $($_.Exception.Message)"
                 }
             }
-        #} finally {
-        #    $this.isProcessing = $false
-        #}
-    }
-
-    [void] WriteError([string]$message) {
-        $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        $logEntry = "$timestamp - ERROR: $message"
+        }
     }
 }

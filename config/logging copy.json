@@ -12,12 +12,13 @@
 			"datePattern" : "yyyy-MM-dd HH:mm:ss.fff",
 			"level"       : "INFO"
 		}, {
-			"type"        : "CSV",
-			"name"        : "csvLogger1",
-			"path"        : "C:/Users/EdwardBlackwell/Documents/logs",
-			"fileName"    : "log-file.csv",
-			"datePattern" : "yyyy-MM-dd HH:mm:ss.fff",
-			"level"       : "DEBUG"
+			"type"             : "CSV",
+			"name"             : "csv1",
+			"datePattern"      : "yyyy-MM-dd HH:mm:ss.fff",
+			"headers"		   : "vcenter,datacenter,cluster,host,vm",
+			"path"             : "C:/Users/EdwardBlackwell/Documents/logs",
+			"fileName"         : "csv-log.log",
+			"logLevel"         : "DEBUG"
 		}, {
 			"type"             : "GoogleChat",
 			"name"             : "googleChat1",

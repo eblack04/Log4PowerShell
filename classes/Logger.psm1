@@ -27,7 +27,7 @@ class Logger {
         
         if ($loggingConfig.console.enabled) {
             $this.consoleEnabled = $true
-            if ($loggingConfig.console.level) { $this.consoleLevel = [LogLevel]$loggingConfig.console.level }
+            if ($loggingConfig.console.logLevel) { $this.consoleLevel = [LogLevel]$loggingConfig.console.logLevel }
             if ($loggingConfig.console.datePattern) { $this.consoleDatePattern = [string]$loggingConfig.console.datePattern }
         }
 
@@ -40,12 +40,12 @@ class Logger {
     #===========================================================================
     # Method to add an appender instance.
     #===========================================================================
-    [void] AddAppender([Appender]$appender) {
-        if(!$appender) {
+    [void] AddAppender([Appender]$Appender) {
+        if(!$Appender) {
             throw "No appender specified"
         }
 
-        $loggingThread = [LoggingThread]::new($appender)
+        $loggingThread = [LoggingThread]::new($Appender)
         $this.loggingThreads += $loggingThread
     }
 
@@ -61,19 +61,19 @@ class Logger {
     #===========================================================================
     #
     #===========================================================================
-    [void] LogMessage([LogMessage]$logMessage) {
-        if(!$logMessage) {
+    [void] LogMessage([LogMessage]$LogMessage) {
+        if(!$LogMessage) {
             throw "No log message specified"
         }
 
         if ($this.consoleEnabled) {
-            if ($logMessage.GetLevel() -le $this.consoleLevel ) {
-                Write-Host "$((Get-Date).ToString($this.consoleDatePattern)) :: $($logMessage.GetMessage())"
+            if ($LogMessage.GetLogLevel() -le $this.consoleLevel ) {
+                Write-Host "$((Get-Date).ToString($this.consoleDatePattern)) :: $($LogMessage.GetMessage())"
             }
         }
 
         foreach ($loggingThread in $this.loggingThreads) {
-            $loggingThread.LogMessage($logMessage)
+            $loggingThread.LogMessage($LogMessage)
         }
     }
 

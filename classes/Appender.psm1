@@ -18,6 +18,8 @@ class Appender {
     # The name of the appender.
     [string]$Name
 
+    [string]$DatePattern
+
     <#
     .SYNOPSIS
         The default constructor for the appender.
@@ -33,6 +35,7 @@ class Appender {
     Appender([object]$Config) {
         if($Config) {
             if($Config.name) { $this.Name = $Config.name} else { throw "No name specified in the configuration"}
+            if($Config.datePattern) { $this.DatePattern = $Config.datePattern} else { throw "No date pattern specified in the configuration"}
         } else {
             throw "Appender configuration not specified"
         }
@@ -53,7 +56,16 @@ class Appender {
         This method is not intended for use.  Derived Appender classes need to
         override this method to provide a specific implementation. 
     #>
-    [void] LogMessage([string]$message) {
-        Write-Host "Appender::LogMessage:  $message"
+    [void] LogMessage([LogMessage]$LogMessage) {
+        Write-Host "Appender::LogMessage:  $($LogMessage.GetTimestamp().ToString($this.DatePattern)) - $($LogMessage.GetMessage())"
+    }
+
+    [void] LogMessages([LogMessage[]]$LogMessages) {
+        $batchMessage = ""
+
+        foreach($logMessage in $LogMessages) {
+            $batchMessage += $($logMessage.GetTimestamp().ToString($this.DatePattern)) - $($logMessage.GetMessage()) + "`n"
+        }
+        Write-Host "$batchMessage"
     }
 }
