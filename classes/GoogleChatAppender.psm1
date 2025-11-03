@@ -2,17 +2,42 @@ using module ".\Appender.psm1"
 using module ".\LogMessage.psm1"
 using module "..\enums\LogLevel.psm1"
 
+<#
+.SYNOPSIS
+    An appender implementation that writes log messages to a Google chat space.
+.DESCRIPTION
+    This class writes log messages to a defined Google chat channel via a 
+    specified web hook URL using a REST call.  If there are any issues when 
+    sending the log messages, the attempt to write the log message to the 
+    specified Google chat channel is resent a specified number of times until
+    either the message is successfully sent, or the number of retries has be 
+    depleted.
+#>
 [NoRunspaceAffinity()]
 class GoogleChatAppender : Appender {
 
+    #
     [string]$WebhookUrl
 
+    #
     [int]$MaxRetryAttempts = 10
 
+    #
     [int]$RetryInterval = 10
 
+    ######### Temp ########
     [string]$LogFile = "C:\Users\EdwardBlackwell\Documents\logs\google-chat.jog"
+    ######### Temp ########
 
+    <#
+    .SYNOPSIS
+        The default constructor that initializes the appender.
+    .DESCRIPTION
+        The configuration passed into the class sets the Google Chat attributes
+        for the class.  These include the webhook URL, the message-sending time
+        interval, and the number of retries to perform if there is an issue 
+        when sending a message.
+    #>
     GoogleChatAppender([object]$Config) : base($Config) {
         Add-Content -Path $this.logFile -Value "Web Hook URL:  $($config.webhookUrl)"
 
@@ -21,6 +46,12 @@ class GoogleChatAppender : Appender {
         if ($Config.retryInterval) { $this.RetryInterval = $Config.retryInterval }
     }
 
+    <#
+    .SYNOPSIS
+        
+    .DESCRIPTION
+        
+    #>
     [void] LogMessage([LogMessage]$LogMessage) {
         Add-Content -Path $this.logFile -Value "LogMessage:  $($LogMessage.GetMessage())"
 
@@ -29,6 +60,12 @@ class GoogleChatAppender : Appender {
         $this.SendMessage($formattedMessage)
     }
 
+    <#
+    .SYNOPSIS
+        
+    .DESCRIPTION
+        
+    #>
     [void] LogMessages([LogMessage[]]$LogMessages) {
         $batchFormattedMessage = ""
 
@@ -39,6 +76,12 @@ class GoogleChatAppender : Appender {
         $this.SendMessage($batchFormattedMessage)
     }
 
+    <#
+    .SYNOPSIS
+        
+    .DESCRIPTION
+        
+    #>
     hidden [void] SendMessage([string]$Message) {
         $retryCount = 0
         $success = $false

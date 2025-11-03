@@ -11,21 +11,24 @@ class CSVAppender : Appender {
 
     [bool]$ValuesMandatory = $false
 
+    ########## Temp #########
     [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\csv-appender.log"
+    #########################
 
-    CSVAppender([object]$config) : base($config) {
-        $this.LogFilePath = $config.path + "/" + $config.fileName
+    
+    CSVAppender([object]$Config) : base($Config) {
+        $this.LogFilePath = $Config.path + "/" + $Config.fileName
 
         # Delete the log file if the logger is not appending to an existing log
         # file.
-        if (!$config.append -and (Test-Path -Path $this.logFilePath -PathType Leaf)) {
+        if (!$Config.append -and (Test-Path -Path $this.logFilePath -PathType Leaf)) {
             Remove-Item -Path $this.logFilePath
         }
 
-        $this.Headers = $config.headers.Split(",")
-        $this.ValuesMandatory = $config.valuesMandatory
-        Add-Content -Path $this.LogFilePath -Value $config.headers
+        if ($Config.Headers) { $this.Headers = $Config.headers.Split(",") }
+        if ($Config.ValuesMandatory) { $this.ValuesMandatory = $Config.valuesMandatory }
 
+        Add-Content -Path $this.LogFilePath -Value $Config.headers
         Add-Content -Path $this.logFile -Value "Set logFilePath to:  $($this.logFilePath)"
     }
 

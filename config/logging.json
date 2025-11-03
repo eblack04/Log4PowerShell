@@ -14,12 +14,14 @@
 			"fileName"        : "csv-log.csv",
 			"logLevel"        : "DEBUG"
 		}, {
-			"type"        : "File",
-			"name"        : "fileLogger1",
-			"path"        : "C:/Users/EdwardBlackwell/Documents/logs",
-			"fileName"    : "file-log.log",
-			"datePattern" : "yyyy-MM-dd HH:mm:ss.fff",
-			"logLevel"       : "DEBUG"
+			"type"            : "File",
+			"name"            : "fileLogger1",
+			"path"            : "C:/Users/EdwardBlackwell/Documents/logs",
+			"fileName"        : "file-%d{MM-dd-yyyy-HH:mm:ss}-log.log",
+			"append"          : true,
+			"rollingFileSize" : "10Mb",
+			"datePattern"     : "yyyy-MM-dd HH:mm:ss.fff",
+			"logLevel"        : "DEBUG"
 		}
 	]
 }
