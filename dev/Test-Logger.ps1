@@ -46,7 +46,7 @@ try {
     $logMessage = [LogMessage]::new("5:  And finally, this is the last message to pass into the logging framework that is somewhat long, but does the job of testing the batching capabilities of the logging framework", [LogLevel]::DEBUG)
     $global:Logger.LogMessage($logMessage)
 
-    #$global:Logger.Stop() 
+    #$global:Logger.Stop()
 } catch {
     Write-Host "Error in Test-Logger:  $($_.Exception.Message)"
 }

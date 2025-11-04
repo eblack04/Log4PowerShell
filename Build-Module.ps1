@@ -18,7 +18,7 @@
     manifest (.psd1) using New-ModuleManifest.
 .PARAMETER ModuleName
     The name of the module. The output folder will be named after the module, and the module
-    files will be named as <ModuleName>.psm1 and <ModuleName>.psd1. Default is 'VMware.Lifecycle'.
+    files will be named as <ModuleName>.psm1 and <ModuleName>.psd1. Default is 'Log4PowerShell'.
 .PARAMETER OutputFolder
     The parent folder where the module folder will be created. Default is '.\Modules'.
 .PARAMETER ClassesFolder
@@ -40,7 +40,7 @@
 #>
 [CmdletBinding()]
 Param (
-    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$ModuleName = "VMware.Logging",
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$ModuleName = "Log4PowerShell",
     [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$OutputFolder = ".\modules",
     [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$ClassesFolder = ".\classes",
     [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$EnumsFolder = ".\enums",
@@ -159,6 +159,17 @@ foreach ($folder in @($ClassesFolder, $PrivateFolder, $PublicFolder)) {
 }
 
 #------------------------------------------
+# Merge Private function files.
+#------------------------------------------
+if (Test-Path -LiteralPath $PrivateFolder) {
+    Write-Host "Merging files in the $PrivateFolder folder"
+    $privateFiles = Get-ChildItem -Path $PrivateFolder -Filter '*.ps1' -File -ErrorAction SilentlyContinue
+    if ($privateFiles -and $privateFiles.Count -gt 0) {
+        Merge-Files -SectionName "Private Function" -Files $privateFiles 
+    }
+}
+
+#------------------------------------------
 # Merge class files.
 #------------------------------------------
 if (Test-Path -LiteralPath $ClassesFolder) {
@@ -177,17 +188,6 @@ if (Test-Path -LiteralPath $EnumsFolder) {
     $enumsFiles = Get-ChildItem -Path $EnumsFolder -Filter '*.psm1' -File -ErrorAction SilentlyContinue
     if ($enumsFiles -and $enumsFiles.Count -gt 0) {
         Merge-Files -SectionName "Enum Definition" -Files $enumsFiles
-    }
-}
-
-#------------------------------------------
-# Merge Private function files.
-#------------------------------------------
-if (Test-Path -LiteralPath $PrivateFolder) {
-    Write-Host "Merging files in the $PrivateFolder folder"
-    $privateFiles = Get-ChildItem -Path $PrivateFolder -Filter '*.ps1' -File -ErrorAction SilentlyContinue
-    if ($privateFiles -and $privateFiles.Count -gt 0) {
-        Merge-Files -SectionName "Private Function" -Files $privateFiles 
     }
 }
 

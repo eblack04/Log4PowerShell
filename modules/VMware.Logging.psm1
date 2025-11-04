@@ -1,7 +1,7 @@
 # ====================================================================================
 # Module: VMware.Logging
 # Version: 1.0
-# Generated: 11-03-2025 11:54:33
+# Generated: 11-04-2025 10:28:02
 # Description: Module for managing vSphere Lifecycle
 # ====================================================================================
 # -------------------------------------------------------------------------
@@ -93,21 +93,26 @@ class CSVAppender : Appender {
 
     [bool]$ValuesMandatory = $false
 
+    ########## Temp #########
     [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\csv-appender.log"
+    #########################
 
-    CSVAppender([object]$config) : base($config) {
-        $this.LogFilePath = $config.path + "/" + $config.fileName
+    CSVAppender([object]$Config) : base($Config) {
+        if (-not $Config.path) { throw "No file path specified" }
+        if (-not $Config.fileName) { throw "No file name specified" }        
+
+        $this.LogFilePath = $Config.path + "/" + (Convert-ToDateFileName -FileName $Config.fileName)
 
         # Delete the log file if the logger is not appending to an existing log
         # file.
-        if (!$config.append -and (Test-Path -Path $this.logFilePath -PathType Leaf)) {
+        if (!$Config.append -and (Test-Path -Path $this.logFilePath -PathType Leaf)) {
             Remove-Item -Path $this.logFilePath
         }
 
-        $this.Headers = $config.headers.Split(",")
-        $this.ValuesMandatory = $config.valuesMandatory
-        Add-Content -Path $this.LogFilePath -Value $config.headers
+        if ($Config.Headers) { $this.Headers = $Config.headers.Split(",") }
+        if ($Config.ValuesMandatory) { $this.ValuesMandatory = $Config.valuesMandatory }
 
+        Add-Content -Path $this.LogFilePath -Value $Config.headers
         Add-Content -Path $this.logFile -Value "Set logFilePath to:  $($this.logFilePath)"
     }
 
@@ -155,6 +160,12 @@ class CSVAppender : Appender {
 # Start: Class Definition - FileAppender
 # -------------------------------------------------------------------------
 
+<#
+.SYNOPSIS
+        
+.DESCRIPTION
+        
+#>
 [NoRunspaceAffinity()]
 class FileAppender : Appender {
     
@@ -162,24 +173,47 @@ class FileAppender : Appender {
 
     [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\file-appender.log"
 
-    FileAppender([object]$config) : base($config) {
-        $this.LogFilePath = $config.path + "/" + $config.fileName
+    <#
+    .SYNOPSIS
+        
+    .DESCRIPTION
+        
+    #>
+    FileAppender([object]$Config) : base($Config) {
+
+        if (-not $Config.path) { throw "No file path specified" }
+        if (-not $Config.fileName) { throw "No file name specified" }
+
+        $this.LogFilePath = $Config.path + "/" + (Convert-ToDateFileName -FileName $Config.fileName)
 
         # Delete the log file if the logger is not appending to an existing log
         # file.
-        if (!$config.append -and (Test-Path -Path $this.LogFilePath -PathType Leaf)) {
+        if (!$Config.append -and (Test-Path -Path $this.LogFilePath -PathType Leaf)) {
             Remove-Item -Path $this.LogFilePath
         }
 
         Add-Content -Path $this.logFile -Value "Set LogFilePath to:  $($this.LogFilePath)"
     }
 
+    <#
+    .SYNOPSIS
+        
+    .DESCRIPTION
+        
+    #>
     [void] LogMessage([LogMessage]$LogMessage) {
         $formattedMessage = "$($LogMessage.GetTimestamp().ToString($this.DatePattern)): $($LogMessage.GetMessage())"
-        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog:  $formattedMessage"
+        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog: $($this.LogFilePath):$formattedMessage"
         Add-Content -Path $this.LogFilePath -Value $formattedMessage
+        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog:after writing:  $formattedMessage"
     }
 
+    <#
+    .SYNOPSIS
+        
+    .DESCRIPTION
+        
+    #>
     [void] LogMessages([LogMessage[]]$LogMessages) {
         foreach ($LogMessage in $LogMessages) {
             $this.LogMessage($LogMessage)
@@ -194,17 +228,42 @@ class FileAppender : Appender {
 # Start: Class Definition - GoogleChatAppender
 # -------------------------------------------------------------------------
 
+<#
+.SYNOPSIS
+    An appender implementation that writes log messages to a Google chat space.
+.DESCRIPTION
+    This class writes log messages to a defined Google chat channel via a 
+    specified web hook URL using a REST call.  If there are any issues when 
+    sending the log messages, the attempt to write the log message to the 
+    specified Google chat channel is resent a specified number of times until
+    either the message is successfully sent, or the number of retries has be 
+    depleted.
+#>
 [NoRunspaceAffinity()]
 class GoogleChatAppender : Appender {
 
+    #
     [string]$WebhookUrl
 
+    #
     [int]$MaxRetryAttempts = 10
 
+    #
     [int]$RetryInterval = 10
 
+    ######### Temp ########
     [string]$LogFile = "C:\Users\EdwardBlackwell\Documents\logs\google-chat.jog"
+    ######### Temp ########
 
+    <#
+    .SYNOPSIS
+        The default constructor that initializes the appender.
+    .DESCRIPTION
+        The configuration passed into the class sets the Google Chat attributes
+        for the class.  These include the webhook URL, the message-sending time
+        interval, and the number of retries to perform if there is an issue 
+        when sending a message.
+    #>
     GoogleChatAppender([object]$Config) : base($Config) {
         Add-Content -Path $this.logFile -Value "Web Hook URL:  $($config.webhookUrl)"
 
@@ -213,6 +272,12 @@ class GoogleChatAppender : Appender {
         if ($Config.retryInterval) { $this.RetryInterval = $Config.retryInterval }
     }
 
+    <#
+    .SYNOPSIS
+        
+    .DESCRIPTION
+        
+    #>
     [void] LogMessage([LogMessage]$LogMessage) {
         Add-Content -Path $this.logFile -Value "LogMessage:  $($LogMessage.GetMessage())"
 
@@ -221,6 +286,12 @@ class GoogleChatAppender : Appender {
         $this.SendMessage($formattedMessage)
     }
 
+    <#
+    .SYNOPSIS
+        
+    .DESCRIPTION
+        
+    #>
     [void] LogMessages([LogMessage[]]$LogMessages) {
         $batchFormattedMessage = ""
 
@@ -231,6 +302,12 @@ class GoogleChatAppender : Appender {
         $this.SendMessage($batchFormattedMessage)
     }
 
+    <#
+    .SYNOPSIS
+        
+    .DESCRIPTION
+        
+    #>
     hidden [void] SendMessage([string]$Message) {
         $retryCount = 0
         $success = $false
@@ -290,81 +367,90 @@ class GoogleChatAppender : Appender {
 class Logger {
 
     # The list of logging threads that manage the appenders.
-    [System.Collections.ArrayList]$loggingThreads = [System.Collections.ArrayList]::new()
+    [System.Collections.ArrayList]$LoggingThreads = [System.Collections.ArrayList]::new()
 
     # The log level for the console if it's enabled.
-    [LogLevel]$consoleLevel = [LogLevel]::INFO
+    [LogLevel]$ConsoleLevel = [LogLevel]::INFO
 
-    [string]$consoleDatePattern = "yyyy-MM-dd HH:mm:ss.fff"
+    # The timestamp date pattern to use if logging is echoed to the console.
+    [string]$ConsoleDatePattern = "yyyy-MM-dd HH:mm:ss.fff"
 
-    [bool]$consoleEnabled = $false
+    # A boolean flag indicating whether or not logging is echoed to the console.
+    [bool]$ConsoleEnabled = $false
 
-    #===========================================================================
-    # Object constructor that sets the appenders for the log object, as well as
-    # setting the lovel level for the log object.
-    #===========================================================================
-    Logger ([object]$configFile) {
+    <#
+    .SYNOPSIS
+        The object constructor that configures the logging framework.
+    .DESCRIPTION
+        Object constructor that sets the appenders for the log object, as well 
+        as setting the lovel level for the log object.
+    #>
+    Logger ([object]$ConfigFile) {
 
-        $jsonContent = Get-Content -Path $configFile -Raw -Encoding UTF8
+        $jsonContent = Get-Content -Path $ConfigFile -Raw -Encoding UTF8
         $loggingConfig = $jsonContent | ConvertFrom-Json
         
         if ($loggingConfig.console.enabled) {
-            $this.consoleEnabled = $true
-            if ($loggingConfig.console.logLevel) { $this.consoleLevel = [LogLevel]$loggingConfig.console.logLevel }
-            if ($loggingConfig.console.datePattern) { $this.consoleDatePattern = [string]$loggingConfig.console.datePattern }
+            $this.ConsoleEnabled = $true
+            if ($loggingConfig.console.logLevel) { $this.ConsoleLevel = [LogLevel]$loggingConfig.console.logLevel }
+            if ($loggingConfig.console.datePattern) { $this.ConsoleDatePattern = [string]$loggingConfig.console.datePattern }
         }
 
         foreach ($appenderConfig in $loggingConfig.appenders) {
             $loggingThread = [LoggingThread]::new($appenderConfig)
-            $this.loggingThreads += $loggingThread
+            $this.LoggingThreads += $loggingThread
         }
     }
 
     #===========================================================================
     # Method to add an appender instance.
     #===========================================================================
+    <#
+    .SYNOPSIS
+        A method to add an appender instance.
+    .DESCRIPTION
+        Adds an appender instance to the list of appenders controlled by this
+        object.
+    #>
     [void] AddAppender([Appender]$Appender) {
         if(!$Appender) {
             throw "No appender specified"
         }
 
         $loggingThread = [LoggingThread]::new($Appender)
-        $this.loggingThreads += $loggingThread
+        $this.LoggingThreads += $loggingThread
     }
 
-    #===========================================================================
-    #
-    #===========================================================================
+    <#
+    #>
     [void] Start() {
-        foreach ($loggingThread in $this.loggingThreads) {
+        foreach ($loggingThread in $this.LoggingThreads) {
             $loggingThread.Start()
         }
     }
 
-    #===========================================================================
-    #
-    #===========================================================================
+    <#
+    #>
     [void] LogMessage([LogMessage]$LogMessage) {
         if(!$LogMessage) {
             throw "No log message specified"
         }
 
-        if ($this.consoleEnabled) {
-            if ($LogMessage.GetLogLevel() -le $this.consoleLevel ) {
-                Write-Host "$((Get-Date).ToString($this.consoleDatePattern)) :: $($LogMessage.GetMessage())"
+        if ($this.ConsoleEnabled) {
+            if ($LogMessage.GetLogLevel() -le $this.ConsoleLevel ) {
+                Write-Host "$((Get-Date).ToString($this.ConsoleDatePattern)) :: $($LogMessage.GetMessage())"
             }
         }
 
-        foreach ($loggingThread in $this.loggingThreads) {
+        foreach ($loggingThread in $this.LoggingThreads) {
             $loggingThread.LogMessage($LogMessage)
         }
     }
 
-    #===========================================================================
-    #
-    #===========================================================================
+    <#
+    #>
     [void] Stop() {
-        foreach ($loggingThread in $this.loggingThreads) {
+        foreach ($loggingThread in $this.LoggingThreads) {
             $loggingThread.Stop()
         }
     }
@@ -378,6 +464,10 @@ class Logger {
 # -------------------------------------------------------------------------
 
 <#
+.SYNOPSIS
+    The main class that maintains the message queue for log messages going to an
+    appender.
+.DESCRIPTION
     This is the workhorse class for the logging system.  Each logging thread is
     in charge of distributing log messages to the appender stored within it as 
     an attribute.  In addition, if the appender is configured with message-
@@ -422,12 +512,21 @@ class LoggingThread {
     # Appender object after this amount of time has passed.
     [int]$BatchInterval = 5
 
+    # The maximum number of log messages received by this logging thread before 
+    # the batched log messages need to be sent to the appender.
     [int]$MaxBatchSize = 50
 
+    # The maximum number of characters the total length of all batched log
+    # messages needs to execede before the batched log messages are sent to the
+    # appender.
     [int]$MaxMessageLength = 4000
 
+    # The PowerShell thread object that constantly listens for messages coming
+    # in on the message queue.
     [Object]$Job
 
+    # The last time that a single message, or batch of messages, were sent to
+    # the appender.
     [datetime]$LastSendTime
 
     <#
@@ -446,7 +545,7 @@ class LoggingThread {
             try {
                 $this.Appender = New-Object -TypeName "$($AppenderConfig.type)Appender" -ArgumentList $AppenderConfig
             } catch{
-                throw "Invalid appender type $($AppenderConfig.type)"
+                throw "Invalid appender type $($AppenderConfig.type): $_.Exception.Message"
             }
         } else {
             throw "No appender class name specified in the configuration"
@@ -805,6 +904,58 @@ enum TaskType {
 # End: Enum Definition - TaskType
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
+# Start: Public Function - Convert-ToDateFileName
+# -------------------------------------------------------------------------
+function Convert-ToDateFileName {
+    param(
+    [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][String]$FileName
+    )
+
+    $datePattern = [regex]::Match($FileName, ".*%d{(.*)}.*")
+
+    if ($datePattern.Success) {
+        $pattern = $datePattern.Groups[1].Value
+        $timestamp = Get-Date -Format $pattern
+        $FileName = $FileName -replace "%d{.*}", $timestamp
+    }
+
+    $invalidChars = [System.IO.Path]::GetInvalidFileNameChars()
+
+    foreach ($char in $invalidChars) {
+        if ($FileName.Contains($char)) {
+            throw "Invalid file name: $FileName"
+        }
+    }
+
+    return $FileName
+}
+
+# -------------------------------------------------------------------------
+# End: Public Function - Convert-ToDateFileName
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Start: Public Function - Convert-ToDateString
+# -------------------------------------------------------------------------
+function Convert-ToDateString {
+    param (
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][String]$DateString
+    )
+
+    $datePattern = [regex]::Match($DateString, ".*%d{(.*)}.*")
+
+    if ($datePattern.Success) {
+        $pattern = $datePattern.Groups[1].Value
+        $timestamp = Get-Date -Format $pattern
+        return $DateString -replace "%d{.*}", $timestamp
+    } else {
+        return $DateString
+    }
+}
+
+# -------------------------------------------------------------------------
+# End: Public Function - Convert-ToDateString
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # Start: Public Function - Import-Config
 # -------------------------------------------------------------------------
 function Import-Config {
@@ -893,4 +1044,4 @@ function New-LogMessage() {
 # -------------------------------------------------------------------------
 # End: Public Function - New-LogMessage
 # -------------------------------------------------------------------------
-Export-ModuleMember -Function Import-Config, New-Appender, New-LogMessage
+Export-ModuleMember -Function Convert-ToDateFileName, Convert-ToDateString, Import-Config, New-Appender, New-LogMessage

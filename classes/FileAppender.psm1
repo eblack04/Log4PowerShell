@@ -4,16 +4,19 @@ using module "..\enums\LogLevel.psm1"
 
 <#
 .SYNOPSIS
-        
+    An appender implementation that writes log messages to a file.
 .DESCRIPTION
-        
+    This class is an implementation of the Appender class that writes log 
+    messages to a file.
 #>
 [NoRunspaceAffinity()]
 class FileAppender : Appender {
     
     [string]$LogFilePath
 
+    ###### Temp ######
     [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\file-appender.log"
+    ##################
 
     <#
     .SYNOPSIS
@@ -26,7 +29,7 @@ class FileAppender : Appender {
         if (-not $Config.path) { throw "No file path specified" }
         if (-not $Config.fileName) { throw "No file name specified" }
 
-        $this.LogFilePath = $Config.path + "/" + (Get-DateString -DateString $Config.fileName)
+        $this.LogFilePath = $Config.path + "/" + (Convert-ToTimestampFileName -FileName $Config.fileName)
 
         # Delete the log file if the logger is not appending to an existing log
         # file.
@@ -45,8 +48,9 @@ class FileAppender : Appender {
     #>
     [void] LogMessage([LogMessage]$LogMessage) {
         $formattedMessage = "$($LogMessage.GetTimestamp().ToString($this.DatePattern)): $($LogMessage.GetMessage())"
-        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog:  $formattedMessage"
+        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog: $($this.LogFilePath):$formattedMessage"
         Add-Content -Path $this.LogFilePath -Value $formattedMessage
+        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog:after writing:  $formattedMessage"
     }
 
     <#

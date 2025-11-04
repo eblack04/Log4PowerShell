@@ -15,9 +15,11 @@ class CSVAppender : Appender {
     [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\csv-appender.log"
     #########################
 
-    
     CSVAppender([object]$Config) : base($Config) {
-        $this.LogFilePath = $Config.path + "/" + $Config.fileName
+        if (-not $Config.path) { throw "No file path specified" }
+        if (-not $Config.fileName) { throw "No file name specified" }        
+
+        $this.LogFilePath = $Config.path + "/" + (Convert-ToTimestampFileName -FileName $Config.fileName)
 
         # Delete the log file if the logger is not appending to an existing log
         # file.

@@ -3,6 +3,10 @@ using module ".\Appender.psm1"
 using module "..\enums\LogLevel.psm1"
 
 <#
+.SYNOPSIS
+    The main class that maintains the message queue for log messages going to an
+    appender.
+.DESCRIPTION
     This is the workhorse class for the logging system.  Each logging thread is
     in charge of distributing log messages to the appender stored within it as 
     an attribute.  In addition, if the appender is configured with message-
@@ -47,12 +51,21 @@ class LoggingThread {
     # Appender object after this amount of time has passed.
     [int]$BatchInterval = 5
 
+    # The maximum number of log messages received by this logging thread before 
+    # the batched log messages need to be sent to the appender.
     [int]$MaxBatchSize = 50
 
+    # The maximum number of characters the total length of all batched log
+    # messages needs to execede before the batched log messages are sent to the
+    # appender.
     [int]$MaxMessageLength = 4000
 
+    # The PowerShell thread object that constantly listens for messages coming
+    # in on the message queue.
     [Object]$Job
 
+    # The last time that a single message, or batch of messages, were sent to
+    # the appender.
     [datetime]$LastSendTime
 
     <#
@@ -71,7 +84,7 @@ class LoggingThread {
             try {
                 $this.Appender = New-Object -TypeName "$($AppenderConfig.type)Appender" -ArgumentList $AppenderConfig
             } catch{
-                throw "Invalid appender type $($AppenderConfig.type)"
+                throw "Invalid appender type $($AppenderConfig.type): $_.Exception.Message"
             }
         } else {
             throw "No appender class name specified in the configuration"
