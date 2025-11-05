@@ -24,24 +24,24 @@
 #>
 function Convert-ToTimestampFileName {
     param(
-    [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][String]$InputString
+    [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][String]$FileName
     )
 
-    $datePattern = [regex]::Match($InputString, ".*%d{(.*)}.*")
+    $datePattern = [regex]::Match($FileName, ".*%d{(.*)}.*")
 
     if ($datePattern.Success) {
         $pattern = $datePattern.Groups[1].Value
         $timestamp = Get-Date -Format $pattern
-        $InputString = $InputString -replace "%d{.*}", $timestamp
+        $FileName = $FileName -replace "%d{.*}", $timestamp
     }
 
     $invalidChars = [System.IO.Path]::GetInvalidFileNameChars()
 
     foreach ($char in $invalidChars) {
-        if ($InputString.Contains($char)) {
-            throw "Invalid file name: $InputString"
+        if ($FileName.Contains($char)) {
+            throw "Invalid file name: $FileName"
         }
     }
 
-    return $InputString
+    return $FileName
 }

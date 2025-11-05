@@ -1,4 +1,4 @@
-using module "../modules/VMware.Logging.psm1"
+using module "../modules/Log4PowerShell.psm1"
 
 try {
     $ConfigFile = "./config/logging.json"
@@ -32,19 +32,36 @@ try {
         "Datacenter" = "32015US"
         "Cluster" = "vsh01.s32015.us"
     }
-
+    $logMessages = @()
     $logMessage = [LogMessage]::new($logHash1, [LogLevel]::DEBUG)
+    $logMessages += $logMessage
     $global:Logger.LogMessage($logMessage)
     $logMessage = [LogMessage]::new($logHash2, [LogLevel]::DEBUG)
+    $logMessages += $logMessage
     $global:Logger.LogMessage($logMessage)
     $logMessage = [LogMessage]::new($logHash3, [LogLevel]::DEBUG)
+    $logMessages += $logMessage
     $global:Logger.LogMessage($logMessage)
     $logMessage = [LogMessage]::new($logHash4, [LogLevel]::DEBUG)
+    $logMessages += $logMessage
     $global:Logger.LogMessage($logMessage)
     $logMessage = [LogMessage]::new("4:  This also happens to be a very long message that has been created in order to test the batching capablities of the PowerShell loging framework", [LogLevel]::DEBUG)
+    $logMessages += $logMessage
     $global:Logger.LogMessage($logMessage)
     $logMessage = [LogMessage]::new("5:  And finally, this is the last message to pass into the logging framework that is somewhat long, but does the job of testing the batching capabilities of the logging framework", [LogLevel]::DEBUG)
+    $logMessages += $logMessage
     $global:Logger.LogMessage($logMessage)
+
+    foreach ($i in 0..1000) {
+        foreach ($logMessage in $logMessages) {
+            Start-Sleep -Milliseconds 50
+            $global:Logger.LogMessage($logMessage)
+        }
+    }
+
+
+    $logMessages = @()
+    
 
     #$global:Logger.Stop()
 } catch {

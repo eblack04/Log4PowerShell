@@ -1,7 +1,7 @@
 # ====================================================================================
-# Module: VMware.Logging
+# Module: Log4PowerShell
 # Version: 1.0
-# Generated: 11-04-2025 10:28:02
+# Generated: 11-05-2025 14:43:48
 # Description: Module for managing vSphere Lifecycle
 # ====================================================================================
 # -------------------------------------------------------------------------
@@ -101,7 +101,7 @@ class CSVAppender : Appender {
         if (-not $Config.path) { throw "No file path specified" }
         if (-not $Config.fileName) { throw "No file name specified" }        
 
-        $this.LogFilePath = $Config.path + "/" + (Convert-ToDateFileName -FileName $Config.fileName)
+        $this.LogFilePath = $Config.path + "/" + (Convert-ToTimestampFileName -FileName $Config.fileName)
 
         # Delete the log file if the logger is not appending to an existing log
         # file.
@@ -162,16 +162,27 @@ class CSVAppender : Appender {
 
 <#
 .SYNOPSIS
-        
+    An appender implementation that writes log messages to a file.
 .DESCRIPTION
-        
+    This class is an implementation of the Appender class that writes log 
+    messages to a file.
 #>
 [NoRunspaceAffinity()]
 class FileAppender : Appender {
     
     [string]$LogFilePath
 
+    [RollingPolicy]$RollingPolicy = [RollingPolicy]::NONE
+
+    [int]$RollingFileSize = 10Mb
+
+    [int]$RollingFileNumber = 5
+
+    [int]$RollingFileCounter = 1;
+
+    ###### Temp ######
     [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\file-appender.log"
+    ##################
 
     <#
     .SYNOPSIS
@@ -183,16 +194,32 @@ class FileAppender : Appender {
 
         if (-not $Config.path) { throw "No file path specified" }
         if (-not $Config.fileName) { throw "No file name specified" }
+        if ($Config.rollingPolicy -and -not [Enum]::IsDefined([RollingPolicy], $Config.rollingPolicy.ToUpper())) { throw "Invalid rolling policy $($Config.rollingPolicy)"}
 
-        $this.LogFilePath = $Config.path + "/" + (Convert-ToDateFileName -FileName $Config.fileName)
+        $this.LogFilePath = $Config.path + "/" + (Convert-ToTimestampFileName -FileName $Config.fileName)
 
-        # Delete the log file if the logger is not appending to an existing log
-        # file.
-        if (!$Config.append -and (Test-Path -Path $this.LogFilePath -PathType Leaf)) {
-            Remove-Item -Path $this.LogFilePath
+        # If there is no rolling policy defined, then set up the single-file
+        # configuration.
+        if (-not $Config.rollingPolicy -or $Config.rollingPolicy -eq [RollingPolicy]::NONE.ToString()) {
+            # Delete the log file if the logger is not appending to an existing log
+            # file.
+            if (!$Config.append -and (Test-Path -Path $this.LogFilePath -PathType Leaf)) {
+                Remove-Item -Path $this.LogFilePath
+            }
+
+            Add-Content -Path $this.logFile -Value "Set LogFilePath to:  $($this.LogFilePath)"
+        } else {
+            if ($Config.rollingFileSize) { $this.RollingFileSize = $Config.rollingFileSize -as [double]}
+            if ($Config.rollingFileNumber) { $this.RollingFileNumber = $Config.rollingFileNumber}
+
+            $this.RollingPolicy = [RollingPolicy]$Config.rollingPolicy
+            Add-Content -Path $this.logFile -Value "Rolling policy:  $($this.RollingPolicy)"
+            $this.LogFilePath = Add-FileNameCounter -FileName $this.LogFilePath -Counter $this.RollingFileCounter
+            Add-Content -Path $this.logFile -Value "Set LogFilePath to:  $($this.LogFilePath)"
+
+            Add-Content -Path $this.logFile -Value "Rolling file number:  $($this.RollingFileNumber)"
+            Add-Content -Path $this.logFile -Value "Rolling file size:  $($this.RollingFileSize)"
         }
-
-        Add-Content -Path $this.logFile -Value "Set LogFilePath to:  $($this.LogFilePath)"
     }
 
     <#
@@ -203,7 +230,47 @@ class FileAppender : Appender {
     #>
     [void] LogMessage([LogMessage]$LogMessage) {
         $formattedMessage = "$($LogMessage.GetTimestamp().ToString($this.DatePattern)): $($LogMessage.GetMessage())"
+        
         Add-Content -Path $this.logFile -Value "FileAppender::WriteLog: $($this.LogFilePath):$formattedMessage"
+
+        if ($this.RollingPolicy) {
+            Add-Content -Path $this.logFile -Value "Rolling policy:  $($this.RollingPolicy)"
+            switch ($this.RollingPolicy) {
+                ([RollingPolicy]::SIZE) {
+                    Add-Content -Path $this.logFile -Value "Rolling policy is SIZE"
+                    
+                    # If the size of the current log file is greater than the 
+                    # configured limit, then roll the log file to the next one.
+                    Add-Content -Path $this.logFile -Value "File size: $((Get-ChildItem -Path $this.LogFilePath).Length)"
+                    Add-Content -Path $this.logFile -Value "Rolling file size: $($this.RollingFileSize)"
+                    if(((Get-ChildItem -Path $this.LogFilePath).Length + $formattedMessage.Length) -gt $this.RollingFileSize) {
+                        Add-Content -Path $this.logFile -Value "Log file $($this.LogFilePath) is greater than size $($this.RollingFileSize)"
+                        if($this.RollingFileCounter + 1 -gt $this.RollingFileNumber) {
+                            Add-Content -Path $this.logFile -Value "Setting the RollingFileCounter to 1"
+                            $this.RollingFileCounter = 1
+                        } else {
+                            Add-Content -Path $this.logFile -Value "Setting the RollingFileCounter to $($this.RollingFileCounter + 1)"
+                            $this.RollingFileCounter++
+                        }
+                        Add-Content -Path $this.logFile -Value "Rolling file counter: $($this.RollingFileCounter)"
+                        Add-Content -Path $this.logFile -Value "Log file path: $($this.LogFilePath)"
+                        
+                        $matchResults = [regex]::Match($this.LogFilePath, "(.*)([0-9])([.].*)")
+                        if ($matchResults.Success) {
+                            $this.LogFilePath = $matchResults.Groups[1].Value + $this.RollingFileCounter + $matchResults.Groups[3].Value
+                        }
+                        
+                        #$this.LogFilePath = Set-FileNameCounter -FileName $this.LogFilePath -Counter $this.RollingFileCounter
+                        Add-Content -Path $this.logFile -Value "Changed log file name to $($this.LogFilePath)"
+
+                        if (Test-Path -Path $this.LogFilePath -PathType Leaf) {
+                            Remove-Item -Path $this.LogFilePath
+                        }
+                    }
+                }
+            }
+        }
+
         Add-Content -Path $this.LogFilePath -Value $formattedMessage
         Add-Content -Path $this.logFile -Value "FileAppender::WriteLog:after writing:  $formattedMessage"
     }
@@ -851,6 +918,21 @@ enum LogLevel {
 # End: Enum Definition - LogLevel
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
+# Start: Enum Definition - RollingPolicy
+# -------------------------------------------------------------------------
+enum RollingPolicy {
+    NONE
+    SIZE
+    MINUTE
+    HOURLY
+    DAILY
+    WEEKLY
+}
+
+# -------------------------------------------------------------------------
+# End: Enum Definition - RollingPolicy
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # Start: Enum Definition - Status
 # -------------------------------------------------------------------------
 # The enumeration representing the status values that a particular task can be 
@@ -904,9 +986,54 @@ enum TaskType {
 # End: Enum Definition - TaskType
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
-# Start: Public Function - Convert-ToDateFileName
+# Start: Public Function - Add-FileNameCounter
 # -------------------------------------------------------------------------
-function Convert-ToDateFileName {
+function Add-FileNameCounter {
+    param (
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][String]$FileName,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][int]$Counter
+    )
+
+    $matchResults = [regex]::Match($FileName, "(.*)(\..*)")
+
+    if ($matchResults.Success) {
+        return $matchResults.Groups[1].Value + "-" + $Counter + $matchResults.Groups[2].Value
+    } else {
+        return $FileName
+    }
+}
+
+# -------------------------------------------------------------------------
+# End: Public Function - Add-FileNameCounter
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Start: Public Function - Convert-ToTimestampFileName
+# -------------------------------------------------------------------------
+<#
+.SYNOPSIS
+    This is a utility function that inserts a timestamp into a given string.
+.DESCRIPTION
+    This function takes a file name string as input, looks for a date format 
+    string within the file name where the date format is bounded by the 
+    characters "%d{<date format>}", and then uses that date format to create a
+    timestamp string.  the timestamp is then inserted into the file name where
+    the markup text resided.
+
+    For example, given that this function is called like the following:
+
+    Convert-ToTimestampFileName -FileName "csv-main-%d{MM-dd-yyyy}.log"
+
+    And that the current date is November 4, 2025, then the returned string 
+    will be:
+
+    "csv-main-11-04-2025.log"
+
+    If no date format string is present within the supplied string, then the
+    string is simply echoed back.  Also, the date format string within the file
+    name is checked to make sure there are no invalid file name characters 
+    present.  If any are found, and exception is thrown.
+#>
+function Convert-ToTimestampFileName {
     param(
     [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][String]$FileName
     )
@@ -931,29 +1058,7 @@ function Convert-ToDateFileName {
 }
 
 # -------------------------------------------------------------------------
-# End: Public Function - Convert-ToDateFileName
-# -------------------------------------------------------------------------
-# -------------------------------------------------------------------------
-# Start: Public Function - Convert-ToDateString
-# -------------------------------------------------------------------------
-function Convert-ToDateString {
-    param (
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][String]$DateString
-    )
-
-    $datePattern = [regex]::Match($DateString, ".*%d{(.*)}.*")
-
-    if ($datePattern.Success) {
-        $pattern = $datePattern.Groups[1].Value
-        $timestamp = Get-Date -Format $pattern
-        return $DateString -replace "%d{.*}", $timestamp
-    } else {
-        return $DateString
-    }
-}
-
-# -------------------------------------------------------------------------
-# End: Public Function - Convert-ToDateString
+# End: Public Function - Convert-ToTimestampFileName
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
 # Start: Public Function - Import-Config
@@ -1013,24 +1118,16 @@ function New-Appender() {
 function New-LogMessage() {
     <#
     .SYNOPSIS
-        Creates a new FileLogger object.
-    
+        Creates a new LogMessage object.
     .DESCRIPTION
-        This function instantiates a new FileLogger object by invoking its constructor 
-        with the specified file path and logger name. The FileLogger is used for logging 
-        messages to a file located at the provided path.
-    
-    .PARAMETER Path
-        The file system path where the log file will be created and maintained.
-    
-    .PARAMETER Name
-        The name of the logger instance. This name is typically used to identify the log file.
-    
+        This function instantiates a new LogMessage object by invoking its constructor 
+        with the specified message and logging level.
+    .PARAMETER Message
+        The log message to encapsulate inside the LogMessage object.
+    .PARAMETER LogLevel
+        The level of the log message
     .EXAMPLE
-        $logger = New-FileLogger -Path "./Logs" -Name "ApplicationLog"
-    
-        This example creates a new FileLogger object that writes logs to the "./Logs" directory 
-        with the name "ApplicationLog".
+        $logger = New-LogMessage -Message "a log message" -LogLevel [LogLevel]::DEBUG
     #>
     [CmdletBinding()]
     param (
@@ -1044,4 +1141,55 @@ function New-LogMessage() {
 # -------------------------------------------------------------------------
 # End: Public Function - New-LogMessage
 # -------------------------------------------------------------------------
-Export-ModuleMember -Function Convert-ToDateFileName, Convert-ToDateString, Import-Config, New-Appender, New-LogMessage
+# -------------------------------------------------------------------------
+# Start: Public Function - Set-FileNameCounter
+# -------------------------------------------------------------------------
+function Set-FileNameCounter {
+    param (
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][String]$FileName,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][int]$Counter
+    )
+
+    $matchResults = [regex]::Match($FileName, "(.*)([0-9])([.].*)")
+
+    if ($matchResults.Success) {
+        return $matchResults.Groups[1].Value + $Counter + $matchResults.Groups[3].Value
+    } else {
+        return $FileName
+    }
+}
+
+# -------------------------------------------------------------------------
+# End: Public Function - Set-FileNameCounter
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Start: Public Function - Write-Debug
+# -------------------------------------------------------------------------
+function Write-Debug {
+    param (
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][String]$Message
+    )
+
+    $logMessage = [LogMessage]::new($Message, [LogLevel]::DEBUG)
+    $global:Logger.LogMessage($logMessage)
+}
+
+# -------------------------------------------------------------------------
+# End: Public Function - Write-Debug
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Start: Public Function - Write-Info
+# -------------------------------------------------------------------------
+function Write-Info {
+    param (
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][String]$Message
+    )
+
+    $logMessage = [LogMessage]::new($Message, [LogLevel]::INFO)
+    $global:Logger.LogMessage($logMessage)
+}
+
+# -------------------------------------------------------------------------
+# End: Public Function - Write-Info
+# -------------------------------------------------------------------------
+Export-ModuleMember -Function Add-FileNameCounter, Convert-ToTimestampFileName, Import-Config, New-Appender, New-LogMessage, Set-FileNameCounter, Write-Debug, Write-Info

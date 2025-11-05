@@ -23,10 +23,23 @@
 			"fileName"          : "file-%d{MM-dd-yyyy-HH-mm-ss}-log.log",
 			"append"            : true,
 			"rolloverPolicy"     : "size",
-			"rolloverFileSize"   : "10Kb",
+			"rolloverFileSize"   : "10Mb",
 			"rolloverFileNumber" : 5,
 			"datePattern"       : "yyyy-MM-dd HH:mm:ss.fff",
 			"logLevel"          : "DEBUG"
+		}, {
+			"type"              : "GoogleChat",
+			"name"              : "googleChat1",
+			"webhookUrl"        : "https://chat.googleapis.com/v1/spaces/AAQA_2CyzVs/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=B4hawzNnqxiS_E5vpvFgZ0l5TlXFND6KGvTv5BEV2PQ",
+			"datePattern"       : "yyyy-MM-dd HH:mm:ss.fff",
+			"logLevel"          : "DEBUG",
+			"maxRetryAttempts"  : 10,
+			"retryInterval"     : 10,
+			"batchConfig"       : {
+				"batchInterval"    : 5,
+				"maxBatchSize"     : 50,
+				"maxMessageLength" : 500
+			}
 		}
 	]
 }
