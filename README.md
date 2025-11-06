@@ -1,11 +1,15 @@
-# Overview
-The Log4PowerShell logging application provides a framework for creating log statements within PowerShell scripts, modules, and classes.  The implementation for this module is object-oriented, and is configured at runtime via a JSON configuration file.  The JSON configuration file allows a user to tailor the logging system to send log messages to a number of different supported types of endpoints.  Currently, the following types of endpoints are supported:
+# Getting Started
+The Log4PowerShell logging application provides a framework for creating log statements within PowerShell scripts, modules, and classes.  The implementation for this module is object-oriented, and is configured at runtime via a JSON configuration file.  The JSON configuration file allows a user to tailor the logging system to send log messages to a number of different types of supported endpoints.  Currently, the following types of endpoints are supported:
 
-* Sending each log message to a specific text file.
-* Sending each log message to a specific CSV file.
-* Sending each log message to a specified Google Chat Channel.
+* Text files.
+* CSV files.
+* Google Chat channels.
 
 The configuration supports the creation and use of more than one of each type of endpoint, as well as customizing the log message output and format to each endpoint.
+
+The Log4PowerShell logging framework places each endpoint processing object into its own PowerShell JobThread object, and uses a ConcurrentQueue within each thread object send log messages to the endpoint processing object, which is called an Appender.  The following class diagram outlines the objects used within the framework
+
+![Class Diagram](./doc/Class_Diagram_1.jpeg "Class Diagram")
 
 In order to use the logging framework after the configuration has been determined and entered into the JSON file, simply run the **Start-Logging.ps1** script in the root directory of the module in order to create the main logger object from the JSON file, and load it into the global scope for the current PowerShell session.  The logger object can then be used directly from the global scope to send log messages, but it is recommended to use the utility functions in the public directory to perform logging tasks as they simplify use greatly.
 

@@ -59,6 +59,7 @@ class LogMessage {
             throw "no log level specified"
         }
 
+        $this.Timestamp = Get-Date
         $this.MessageHash = $MessageHash
         $this.LogLevel = $LogLevel
         

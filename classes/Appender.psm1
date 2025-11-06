@@ -20,6 +20,8 @@ class Appender {
 
     [string]$DatePattern
 
+    [object]$Config
+
     <#
     .SYNOPSIS
         The default constructor for the appender.
@@ -36,6 +38,7 @@ class Appender {
         if($Config) {
             if($Config.name) { $this.Name = $Config.name} else { throw "No name specified in the configuration"}
             if($Config.datePattern) { $this.DatePattern = $Config.datePattern} else { throw "No date pattern specified in the configuration"}
+            $this.Config = $Config
         } else {
             throw "Appender configuration not specified"
         }
@@ -47,6 +50,14 @@ class Appender {
     #>
     [string] GetName () {
         return $this.Name
+    }
+
+    <#
+    .SYNOPSIS
+        Returns the date pattern of the appender.
+    #>
+    [string] GetDatePattern () {
+        return $this.DatePattern
     }
 
     <#

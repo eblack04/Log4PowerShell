@@ -1,9 +1,152 @@
 # ====================================================================================
 # Module: Log4PowerShell
 # Version: 1.0
-# Generated: 11-05-2025 14:43:48
+# Generated: 11-06-2025 17:22:16
 # Description: Module for managing vSphere Lifecycle
 # ====================================================================================
+# -------------------------------------------------------------------------
+# Start: Class Definition - LogMessage
+# -------------------------------------------------------------------------
+
+<#
+.SYNOPSIS
+    Brief description.
+.DESCRIPTION
+    Detailed description.
+#>
+[NoRunspaceAffinity()]
+class LogMessage {
+    # The time the message was generated.
+    [datetime]$Timestamp
+
+    # The object used as the body for the message.
+    [object]$MessageHash
+
+    # The logging level for the message.
+    [LogLevel]$LogLevel
+
+    # The number of characters in the message.
+    [int]$MessageLength
+
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
+    LogMessage([string]$Message, [LogLevel]$LogLevel) {
+        if(!$Message) {
+            throw "no message specified"
+        }
+
+        if(!$LogLevel) {
+            throw "no log level specified"
+        }
+
+        $this.Timestamp = Get-Date
+        $this.MessageHash = @{}
+        $this.MessageHash.Message = $Message
+        $this.LogLevel = $LogLevel
+        $this.MessageLength = $Message.Length
+    }
+
+    <#
+    .SYNOPSIS
+        A LogMessage constructor that accepts a hash message directly.
+    .DESCRIPTION
+        This constructor accepts a message hash object and the logging level for
+        the message.  The hash object becomes the body of the message, and it is
+        up to the appenders to utilize the hash for logging purposes.
+    #>
+    LogMessage([object]$MessageHash, [LogLevel]$LogLevel) {
+        if(!$MessageHash) {
+            throw "no message hash specified"
+        }
+
+        if(!$LogLevel) {
+            throw "no log level specified"
+        }
+
+        $this.Timestamp = Get-Date
+        $this.MessageHash = $MessageHash
+        $this.LogLevel = $LogLevel
+        
+        foreach ($property in $this.MessageHash.GetEnumerator()) {
+            $this.MessageLength += $property.Name.Length + $property.Value.Length
+        }
+    }
+
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
+    [string] GetMessage() { 
+        Write-Host "this.MessageHash.Keys.Count:  $($this.MessageHash.Keys.Count)"
+        Write-Host "this.MessageHash.ContainsKey(`"Message`"):  $($this.MessageHash.ContainsKey("Message"))"
+
+        if ($this.MessageHash.Keys.Count -eq 1 -and $this.MessageHash.ContainsKey("Message")) {
+            return $this.MessageHash.Message
+        } else {
+            $messageText = ""
+
+            foreach ($property in $this.MessageHash.GetEnumerator()) {
+                if($messageText.Length -ne 0) {
+                    $messageText += ", "
+                }
+
+                $messageText += $property.Name + " = " + $property.Value
+            }
+
+            return $messageText
+        }
+    }
+
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
+    [PSCustomObject] GetMessageHash() {
+        return $this.MessageHash
+    }
+
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
+    [LogLevel] GetLogLevel() {
+        return $this.LogLevel
+    }
+
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
+    [int] GetMessageLength() {
+        return $this.MessageLength
+    }
+
+    <#
+    .SYNOPSIS
+        Brief description.
+    .DESCRIPTION
+        Detailed description.
+    #>
+    [datetime] GetTimestamp() {
+        return $this.Timestamp
+    }
+}
+
+# -------------------------------------------------------------------------
+# End: Class Definition - LogMessage
+# -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
 # Start: Class Definition - Appender
 # -------------------------------------------------------------------------
@@ -27,6 +170,8 @@ class Appender {
 
     [string]$DatePattern
 
+    [object]$Config
+
     <#
     .SYNOPSIS
         The default constructor for the appender.
@@ -43,6 +188,7 @@ class Appender {
         if($Config) {
             if($Config.name) { $this.Name = $Config.name} else { throw "No name specified in the configuration"}
             if($Config.datePattern) { $this.DatePattern = $Config.datePattern} else { throw "No date pattern specified in the configuration"}
+            $this.Config = $Config
         } else {
             throw "Appender configuration not specified"
         }
@@ -54,6 +200,14 @@ class Appender {
     #>
     [string] GetName () {
         return $this.Name
+    }
+
+    <#
+    .SYNOPSIS
+        Returns the date pattern of the appender.
+    #>
+    [string] GetDatePattern () {
+        return $this.DatePattern
     }
 
     <#
@@ -81,82 +235,6 @@ class Appender {
 # End: Class Definition - Appender
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
-# Start: Class Definition - CSVAppender
-# -------------------------------------------------------------------------
-
-[NoRunspaceAffinity()]
-class CSVAppender : Appender {
-    
-    [string]$LogFilePath
-
-    [string[]]$Headers
-
-    [bool]$ValuesMandatory = $false
-
-    ########## Temp #########
-    [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\csv-appender.log"
-    #########################
-
-    CSVAppender([object]$Config) : base($Config) {
-        if (-not $Config.path) { throw "No file path specified" }
-        if (-not $Config.fileName) { throw "No file name specified" }        
-
-        $this.LogFilePath = $Config.path + "/" + (Convert-ToTimestampFileName -FileName $Config.fileName)
-
-        # Delete the log file if the logger is not appending to an existing log
-        # file.
-        if (!$Config.append -and (Test-Path -Path $this.logFilePath -PathType Leaf)) {
-            Remove-Item -Path $this.logFilePath
-        }
-
-        if ($Config.Headers) { $this.Headers = $Config.headers.Split(",") }
-        if ($Config.ValuesMandatory) { $this.ValuesMandatory = $Config.valuesMandatory }
-
-        Add-Content -Path $this.LogFilePath -Value $Config.headers
-        Add-Content -Path $this.logFile -Value "Set logFilePath to:  $($this.logFilePath)"
-    }
-
-    [void] LogMessage([LogMessage]$LogMessage) {
-        Add-Content -Path $this.logFile -Value "CSVAppender::LogMessage.GetMessage():  $($LogMessage.GetMessage()))"
-
-        $containsAllKeys = $true
-        $messageValues = @()
-
-        # This 'for' loop retrieves all the values for each column in the CSV
-        # file.  If any of the column values are missing, then the log entry is
-        # skipped.
-        foreach ($header in $this.Headers) {
-            $messageValue = $LogMessage.GetMessageHash()[$header]
-
-            if ($messageValue) {
-                $messageValues += $messageValue
-            } else {
-                $messageValues += ""
-                $containsAllKeys = $false
-            }
-        }
-
-        if (($containsAllKeys -and $this.ValuesMandatory) -or (-not $this.ValuesMandatory)) {
-            $csvMessage = $messageValues -Join ","
-            Add-Content -Path $this.logFile -Value "CSVAppender::LogMessage:  $csvMessage)"
-
-            # After processing all the properties, just returned the array as a 
-            # joined string.
-            Add-Content -Path $this.logFilePath -Value $csvMessage
-        }
-    }
-
-    [void] LogMessages([LogMessage[]]$LogMessages) {
-        foreach ($logMessage in $LogMessages) {
-            $this.LogMessage($logMessage)
-        }
-    }
-}
-
-# -------------------------------------------------------------------------
-# End: Class Definition - CSVAppender
-# -------------------------------------------------------------------------
-# -------------------------------------------------------------------------
 # Start: Class Definition - FileAppender
 # -------------------------------------------------------------------------
 
@@ -169,19 +247,21 @@ class CSVAppender : Appender {
 #>
 [NoRunspaceAffinity()]
 class FileAppender : Appender {
-    
+
     [string]$LogFilePath
 
-    [RollingPolicy]$RollingPolicy = [RollingPolicy]::NONE
+    [RolloverPolicy]$RolloverPolicy = [RolloverPolicy]::NONE
 
-    [int]$RollingFileSize = 10Mb
+    [int]$RolloverFileSize = 10Mb
 
-    [int]$RollingFileNumber = 5
+    [int]$RolloverFileNumber = 5
 
-    [int]$RollingFileCounter = 1;
+    [int]$RolloverFileCounter = 1
+
+    [datetime]$LastRolloverTime = (Get-Date)
 
     ###### Temp ######
-    [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\file-appender.log"
+    [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\file-appender.log" # Remove
     ##################
 
     <#
@@ -194,31 +274,33 @@ class FileAppender : Appender {
 
         if (-not $Config.path) { throw "No file path specified" }
         if (-not $Config.fileName) { throw "No file name specified" }
-        if ($Config.rollingPolicy -and -not [Enum]::IsDefined([RollingPolicy], $Config.rollingPolicy.ToUpper())) { throw "Invalid rolling policy $($Config.rollingPolicy)"}
+        if ($Config.rolloverPolicy -and -not [Enum]::IsDefined([RolloverPolicy], $Config.rolloverPolicy.ToUpper())) { throw "Invalid rollover policy $($Config.rolloverPolicy)"}
 
         $this.LogFilePath = $Config.path + "/" + (Convert-ToTimestampFileName -FileName $Config.fileName)
 
-        # If there is no rolling policy defined, then set up the single-file
+        # If there is no rollover policy defined, then set up the single-file
         # configuration.
-        if (-not $Config.rollingPolicy -or $Config.rollingPolicy -eq [RollingPolicy]::NONE.ToString()) {
+        if (-not $Config.rolloverPolicy -or $Config.rolloverPolicy -eq [RolloverPolicy]::NONE.ToString()) {
             # Delete the log file if the logger is not appending to an existing log
             # file.
             if (!$Config.append -and (Test-Path -Path $this.LogFilePath -PathType Leaf)) {
                 Remove-Item -Path $this.LogFilePath
+                $this.addFileHeader()
             }
 
             Add-Content -Path $this.logFile -Value "Set LogFilePath to:  $($this.LogFilePath)"
         } else {
-            if ($Config.rollingFileSize) { $this.RollingFileSize = $Config.rollingFileSize -as [double]}
-            if ($Config.rollingFileNumber) { $this.RollingFileNumber = $Config.rollingFileNumber}
+            if ($Config.rolloverFileSize) { $this.RolloverFileSize = $Config.rolloverFileSize -as [double]}
+            if ($Config.rolloverFileNumber) { $this.RolloverFileNumber = $Config.rolloverFileNumber}
 
-            $this.RollingPolicy = [RollingPolicy]$Config.rollingPolicy
-            Add-Content -Path $this.logFile -Value "Rolling policy:  $($this.RollingPolicy)"
-            $this.LogFilePath = Add-FileNameCounter -FileName $this.LogFilePath -Counter $this.RollingFileCounter
-            Add-Content -Path $this.logFile -Value "Set LogFilePath to:  $($this.LogFilePath)"
+            $this.RolloverPolicy = [RolloverPolicy]$Config.rolloverPolicy
+            Add-Content -Path $this.logFile -Value "Rollover policy:  $($this.RolloverPolicy)" # Remove
+            $this.LogFilePath = Add-FileNameCounter -FileName $this.LogFilePath -Counter $this.RolloverFileCounter
+            $this.addFileHeader()
+            Add-Content -Path $this.logFile -Value "Set LogFilePath to:  $($this.LogFilePath)" # Remove
 
-            Add-Content -Path $this.logFile -Value "Rolling file number:  $($this.RollingFileNumber)"
-            Add-Content -Path $this.logFile -Value "Rolling file size:  $($this.RollingFileSize)"
+            Add-Content -Path $this.logFile -Value "Rollover file number:  $($this.RolloverFileNumber)" # Remove
+            Add-Content -Path $this.logFile -Value "Rollover file size:  $($this.RolloverFileSize)" # Remove
         }
     }
 
@@ -229,50 +311,76 @@ class FileAppender : Appender {
         
     #>
     [void] LogMessage([LogMessage]$LogMessage) {
-        $formattedMessage = "$($LogMessage.GetTimestamp().ToString($this.DatePattern)): $($LogMessage.GetMessage())"
+        $formattedMessage = $this.formatMessage($LogMessage)
         
-        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog: $($this.LogFilePath):$formattedMessage"
+        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog: $($this.LogFilePath):$formattedMessage" # Remove
 
-        if ($this.RollingPolicy) {
-            Add-Content -Path $this.logFile -Value "Rolling policy:  $($this.RollingPolicy)"
-            switch ($this.RollingPolicy) {
-                ([RollingPolicy]::SIZE) {
-                    Add-Content -Path $this.logFile -Value "Rolling policy is SIZE"
+        if ($this.RolloverPolicy -and $this.RolloverPolicy -ne [RolloverPolicy]::NONE) {
+
+            $triggerRollover = $false
+
+            #Add-Content -Path $this.logFile -Value "Rollover policy:  $($this.RolloverPolicy)" # Remove
+            switch ($this.RolloverPolicy) {
+                ([RolloverPolicy]::SIZE) {
+                    #Add-Content -Path $this.logFile -Value "Rollover policy is SIZE" # Remove
                     
                     # If the size of the current log file is greater than the 
                     # configured limit, then roll the log file to the next one.
-                    Add-Content -Path $this.logFile -Value "File size: $((Get-ChildItem -Path $this.LogFilePath).Length)"
-                    Add-Content -Path $this.logFile -Value "Rolling file size: $($this.RollingFileSize)"
-                    if(((Get-ChildItem -Path $this.LogFilePath).Length + $formattedMessage.Length) -gt $this.RollingFileSize) {
-                        Add-Content -Path $this.logFile -Value "Log file $($this.LogFilePath) is greater than size $($this.RollingFileSize)"
-                        if($this.RollingFileCounter + 1 -gt $this.RollingFileNumber) {
-                            Add-Content -Path $this.logFile -Value "Setting the RollingFileCounter to 1"
-                            $this.RollingFileCounter = 1
-                        } else {
-                            Add-Content -Path $this.logFile -Value "Setting the RollingFileCounter to $($this.RollingFileCounter + 1)"
-                            $this.RollingFileCounter++
-                        }
-                        Add-Content -Path $this.logFile -Value "Rolling file counter: $($this.RollingFileCounter)"
-                        Add-Content -Path $this.logFile -Value "Log file path: $($this.LogFilePath)"
-                        
-                        $matchResults = [regex]::Match($this.LogFilePath, "(.*)([0-9])([.].*)")
-                        if ($matchResults.Success) {
-                            $this.LogFilePath = $matchResults.Groups[1].Value + $this.RollingFileCounter + $matchResults.Groups[3].Value
-                        }
-                        
-                        #$this.LogFilePath = Set-FileNameCounter -FileName $this.LogFilePath -Counter $this.RollingFileCounter
-                        Add-Content -Path $this.logFile -Value "Changed log file name to $($this.LogFilePath)"
+                    #Add-Content -Path $this.logFile -Value "File size: $((Get-ChildItem -Path $this.LogFilePath).Length)" # Remove
+                    #Add-Content -Path $this.logFile -Value "Rollover file size: $($this.RolloverFileSize)" # Remove
+                    if(((Get-ChildItem -Path $this.LogFilePath).Length + $formattedMessage.Length) -gt $this.RolloverFileSize) {
+                        $triggerRollover = $true
+                    } 
+                }
+                ($_ -in @([RolloverPolicy]::MINUTE, [RolloverPolicy]::HOURLY, [RolloverPolicy]::DAILY,[RolloverPolicy]::WEEKLY)) {
+                    $timeDifference = (Get-Date) - $this.LastRolloverTime
 
-                        if (Test-Path -Path $this.LogFilePath -PathType Leaf) {
-                            Remove-Item -Path $this.LogFilePath
-                        }
+                    # Use the value assigned to the rollover policy enumeration,
+                    # which is the value of the policy in minutes if the 
+                    # enumeration represents a time value.
+                    if ($timeDifference.Minutes -gt $_.Value__) {
+                        $triggerRollover = $true
                     }
                 }
+            }
+
+            if ($triggerRollover) {
+                # This 'if' statement determines the index of the next file in the rollover list.
+                #Add-Content -Path $this.logFile -Value "Log file $($this.LogFilePath) is greater than size $($this.RolloverFileSize)" # Remove
+                if($this.RolloverFileCounter + 1 -gt $this.RolloverFileNumber) {
+                    #Add-Content -Path $this.logFile -Value "Setting the RolloverFileCounter to 1" # Remove
+                    $this.RolloverFileCounter = 1
+                } else {
+                    #Add-Content -Path $this.logFile -Value "Setting the RolloverFileCounter to $($this.RolloverFileCounter + 1)" # Remove
+                    $this.RolloverFileCounter++
+                }
+                #Add-Content -Path $this.logFile -Value "Rollover file counter: $($this.RolloverFileCounter)" # Remove
+                #Add-Content -Path $this.logFile -Value "Log file path: $($this.LogFilePath)" # Remove
+
+                # This regular expression and 'if' statement removes the
+                # current rollover index from the name, and inserts the
+                # next one.
+                $matchResults = [regex]::Match($this.LogFilePath, "(.*)(\d+)([.].*)")
+                if ($matchResults.Success) {
+                    $this.LogFilePath = $matchResults.Groups[1].Value + $this.RolloverFileCounter + $matchResults.Groups[3].Value
+                }
+
+                #Add-Content -Path $this.logFile -Value "Changed log file name to $($this.LogFilePath)" # Remove
+
+                # After setting the log file name to the next name in 
+                # rollover list, delete the file if it currently 
+                # exists to rollover on top of it.
+                if (Test-Path -Path $this.LogFilePath -PathType Leaf) {
+                    Remove-Item -Path $this.LogFilePath
+                }
+
+                # Add the header, if one needs to be added, to the new file.
+                $this.addFileHeader()
             }
         }
 
         Add-Content -Path $this.LogFilePath -Value $formattedMessage
-        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog:after writing:  $formattedMessage"
+        #Add-Content -Path $this.logFile -Value "FileAppender::WriteLog:after writing:  $formattedMessage" # Remove
     }
 
     <#
@@ -286,10 +394,95 @@ class FileAppender : Appender {
             $this.LogMessage($LogMessage)
         }
     }
+
+    hidden [void] addFileHeader() {
+    }
+
+    hidden [string] formatMessage([LogMessage]$LogMessage) {
+        return "$($LogMessage.GetTimestamp().ToString($this.DatePattern)): $($LogMessage.GetMessage())"
+    }
 }
 
 # -------------------------------------------------------------------------
 # End: Class Definition - FileAppender
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Start: Class Definition - CSVAppender
+# -------------------------------------------------------------------------
+
+[NoRunspaceAffinity()]
+class CSVAppender : FileAppender {
+
+    [string[]]$Headers
+
+    [bool]$ValuesMandatory = $false
+
+    ###### Temp ######
+    [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\csv-appender.log" # Remove
+    ##################
+
+    CSVAppender([object]$Config) : base($Config) {
+        if ($Config.Headers) { $this.Headers = $Config.headers.Split(",") }
+        if ($Config.ValuesMandatory) { $this.ValuesMandatory = $Config.valuesMandatory }
+        Add-Content -Path $this.logFile -Value "CSVAppender::constructor::Headers  $($this.Headers)"
+        Add-Content -Path $this.logFile -Value "CSVAppender::constructor::ValuesMandatory  $($this.ValuesMandatory)"
+    }
+
+    hidden [void] addFileHeader() {
+        Add-Content -Path $this.logFile -Value "Adding headers: $($this.Config.headers) to file $($this.LogFilePath)"
+        Add-Content -Path $this.LogFilePath -Value $this.Config.headers
+    }
+
+    <#
+    .SYNOPSIS
+        
+    .DESCRIPTION
+    #>
+    hidden [string] formatMessage([LogMessage]$LogMessage) {
+        $containsAllKeys = $true
+        $messageValues = @()
+        $csvMessage = $LogMessage.GetMessage()
+
+        # This 'for' loop retrieves all the values for each column in the CSV
+        # file.  If any of the column values are missing, then the log entry is
+        # skipped.
+        foreach ($header in $this.Headers) {
+            if ($header -eq "Timestamp") {
+                Add-Content -Path $this.logFile -Value "Date pattern:  $($this.DatePattern)"
+                Add-Content -Path $this.logFile -Value "Timestamp from message:  $($this.Timestamp)"
+                $messageValue = $LogMessage.GetTimestamp().ToString($this.DatePattern)
+            } else {
+                Add-Content -Path $this.logFile -Value "Joining the fields"
+                $messageValue = $LogMessage.GetMessageHash()[$header]
+            }
+
+            if ($messageValue) {
+                Add-Content -Path $this.logFile -Value "messageValue:  $messageValue"
+                $messageValues += $messageValue
+            } else {
+                Add-Content -Path $this.logFile -Value "messageValue not found"
+                $messageValues += ""
+                $containsAllKeys = $false
+            }
+        }
+
+        if (($containsAllKeys -and $this.ValuesMandatory) -or (-not $this.ValuesMandatory)) {
+            Add-Content -Path $this.logFile -Value "Joining the fields"
+            $csvMessage = $messageValues -Join ","
+        }
+
+        Add-Content -Path $this.logFile -Value "csvMessage:  $csvMessage"
+
+        return $csvMessage
+    }
+
+    hidden [void] endFile([string] $footer) {
+
+    }
+}
+
+# -------------------------------------------------------------------------
+# End: Class Definition - CSVAppender
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
 # Start: Class Definition - GoogleChatAppender
@@ -425,106 +618,6 @@ class GoogleChatAppender : Appender {
 
 # -------------------------------------------------------------------------
 # End: Class Definition - GoogleChatAppender
-# -------------------------------------------------------------------------
-# -------------------------------------------------------------------------
-# Start: Class Definition - Logger
-# -------------------------------------------------------------------------
-
-[NoRunspaceAffinity()]
-class Logger {
-
-    # The list of logging threads that manage the appenders.
-    [System.Collections.ArrayList]$LoggingThreads = [System.Collections.ArrayList]::new()
-
-    # The log level for the console if it's enabled.
-    [LogLevel]$ConsoleLevel = [LogLevel]::INFO
-
-    # The timestamp date pattern to use if logging is echoed to the console.
-    [string]$ConsoleDatePattern = "yyyy-MM-dd HH:mm:ss.fff"
-
-    # A boolean flag indicating whether or not logging is echoed to the console.
-    [bool]$ConsoleEnabled = $false
-
-    <#
-    .SYNOPSIS
-        The object constructor that configures the logging framework.
-    .DESCRIPTION
-        Object constructor that sets the appenders for the log object, as well 
-        as setting the lovel level for the log object.
-    #>
-    Logger ([object]$ConfigFile) {
-
-        $jsonContent = Get-Content -Path $ConfigFile -Raw -Encoding UTF8
-        $loggingConfig = $jsonContent | ConvertFrom-Json
-        
-        if ($loggingConfig.console.enabled) {
-            $this.ConsoleEnabled = $true
-            if ($loggingConfig.console.logLevel) { $this.ConsoleLevel = [LogLevel]$loggingConfig.console.logLevel }
-            if ($loggingConfig.console.datePattern) { $this.ConsoleDatePattern = [string]$loggingConfig.console.datePattern }
-        }
-
-        foreach ($appenderConfig in $loggingConfig.appenders) {
-            $loggingThread = [LoggingThread]::new($appenderConfig)
-            $this.LoggingThreads += $loggingThread
-        }
-    }
-
-    #===========================================================================
-    # Method to add an appender instance.
-    #===========================================================================
-    <#
-    .SYNOPSIS
-        A method to add an appender instance.
-    .DESCRIPTION
-        Adds an appender instance to the list of appenders controlled by this
-        object.
-    #>
-    [void] AddAppender([Appender]$Appender) {
-        if(!$Appender) {
-            throw "No appender specified"
-        }
-
-        $loggingThread = [LoggingThread]::new($Appender)
-        $this.LoggingThreads += $loggingThread
-    }
-
-    <#
-    #>
-    [void] Start() {
-        foreach ($loggingThread in $this.LoggingThreads) {
-            $loggingThread.Start()
-        }
-    }
-
-    <#
-    #>
-    [void] LogMessage([LogMessage]$LogMessage) {
-        if(!$LogMessage) {
-            throw "No log message specified"
-        }
-
-        if ($this.ConsoleEnabled) {
-            if ($LogMessage.GetLogLevel() -le $this.ConsoleLevel ) {
-                Write-Host "$((Get-Date).ToString($this.ConsoleDatePattern)) :: $($LogMessage.GetMessage())"
-            }
-        }
-
-        foreach ($loggingThread in $this.LoggingThreads) {
-            $loggingThread.LogMessage($LogMessage)
-        }
-    }
-
-    <#
-    #>
-    [void] Stop() {
-        foreach ($loggingThread in $this.LoggingThreads) {
-            $loggingThread.Stop()
-        }
-    }
-}
-
-# -------------------------------------------------------------------------
-# End: Class Definition - Logger
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
 # Start: Class Definition - LoggingThread
@@ -758,146 +851,112 @@ class LoggingThread {
 # End: Class Definition - LoggingThread
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
-# Start: Class Definition - LogMessage
+# Start: Class Definition - Logger
 # -------------------------------------------------------------------------
 
-<#
-.SYNOPSIS
-    Brief description.
-.DESCRIPTION
-    Detailed description.
-#>
 [NoRunspaceAffinity()]
-class LogMessage {
-    # The time the message was generated.
-    [datetime]$Timestamp
+class Logger {
 
-    # The object used as the body for the message.
-    [object]$MessageHash
+    # The list of logging threads that manage the appenders.
+    [System.Collections.ArrayList]$LoggingThreads = [System.Collections.ArrayList]::new()
 
-    # The logging level for the message.
-    [LogLevel]$LogLevel
+    # The log level for the console if it's enabled.
+    [LogLevel]$ConsoleLevel = [LogLevel]::INFO
 
-    # The number of characters in the message.
-    [int]$MessageLength
+    # The timestamp date pattern to use if logging is echoed to the console.
+    [string]$ConsoleDatePattern = "yyyy-MM-dd HH:mm:ss.fff"
 
-    <#
-    .SYNOPSIS
-        Brief description.
-    .DESCRIPTION
-        Detailed description.
-    #>
-    LogMessage([string]$Message, [LogLevel]$LogLevel) {
-        if(!$Message) {
-            throw "no message specified"
-        }
-
-        if(!$LogLevel) {
-            throw "no log level specified"
-        }
-
-        $this.Timestamp = Get-Date
-        $this.MessageHash = @{}
-        $this.MessageHash.Message = $Message
-        $this.LogLevel = $LogLevel
-        $this.MessageLength = $Message.Length
-    }
+    # A boolean flag indicating whether or not logging is echoed to the console.
+    [bool]$ConsoleEnabled = $false
 
     <#
     .SYNOPSIS
-        A LogMessage constructor that accepts a hash message directly.
+        The object constructor that configures the logging framework.
     .DESCRIPTION
-        This constructor accepts a message hash object and the logging level for
-        the message.  The hash object becomes the body of the message, and it is
-        up to the appenders to utilize the hash for logging purposes.
+        Object constructor that sets the appenders for the log object, as well 
+        as setting the lovel level for the log object.
     #>
-    LogMessage([object]$MessageHash, [LogLevel]$LogLevel) {
-        if(!$MessageHash) {
-            throw "no message hash specified"
-        }
+    Logger ([object]$ConfigFile) {
 
-        if(!$LogLevel) {
-            throw "no log level specified"
-        }
-
-        $this.MessageHash = $MessageHash
-        $this.LogLevel = $LogLevel
+        $jsonContent = Get-Content -Path $ConfigFile -Raw -Encoding UTF8
+        $loggingConfig = $jsonContent | ConvertFrom-Json
         
-        foreach ($property in $this.MessageHash.GetEnumerator()) {
-            $this.MessageLength += $property.Name.Length + $property.Value.Length
+        if ($loggingConfig.console.enabled) {
+            $this.ConsoleEnabled = $true
+            if ($loggingConfig.console.logLevel) { $this.ConsoleLevel = [LogLevel]$loggingConfig.console.logLevel }
+            if ($loggingConfig.console.datePattern) { $this.ConsoleDatePattern = [string]$loggingConfig.console.datePattern }
+        }
+
+        foreach ($appenderConfig in $loggingConfig.appenders) {
+            $loggingThread = [LoggingThread]::new($appenderConfig)
+            $this.LoggingThreads += $loggingThread
+        }
+    }
+
+    #===========================================================================
+    # Method to add an appender instance.
+    #===========================================================================
+    <#
+    .SYNOPSIS
+        A method to add an appender instance.
+    .DESCRIPTION
+        Adds an appender instance to the list of appenders controlled by this
+        object.
+    #>
+    [void] AddAppender([Appender]$Appender) {
+        if(!$Appender) {
+            throw "No appender specified"
+        }
+
+        $loggingThread = [LoggingThread]::new($Appender)
+        $this.LoggingThreads += $loggingThread
+    }
+
+    <#
+    #>
+    [void] Start() {
+        foreach ($loggingThread in $this.LoggingThreads) {
+            $loggingThread.Start()
         }
     }
 
     <#
-    .SYNOPSIS
-        Brief description.
-    .DESCRIPTION
-        Detailed description.
     #>
-    [string] GetMessage() { 
-        Write-Host "this.MessageHash.Keys.Count:  $($this.MessageHash.Keys.Count)"
-        Write-Host "this.MessageHash.ContainsKey(`"Message`"):  $($this.MessageHash.ContainsKey("Message"))"
+    [void] LogMessage([LogMessage]$LogMessage) {
+        if(!$LogMessage) {
+            throw "No log message specified"
+        }
 
-        if ($this.MessageHash.Keys.Count -eq 1 -and $this.MessageHash.ContainsKey("Message")) {
-            return $this.MessageHash.Message
-        } else {
-            $messageText = ""
-
-            foreach ($property in $this.MessageHash.GetEnumerator()) {
-                if($messageText.Length -ne 0) {
-                    $messageText += ", "
-                }
-
-                $messageText += $property.Name + " = " + $property.Value
+        if ($this.ConsoleEnabled) {
+            if ($LogMessage.GetLogLevel() -le $this.ConsoleLevel ) {
+                Write-Host "$((Get-Date).ToString($this.ConsoleDatePattern)) :: $($LogMessage.GetMessage())"
             }
+        }
 
-            return $messageText
+        foreach ($loggingThread in $this.LoggingThreads) {
+            $loggingThread.LogMessage($LogMessage)
         }
     }
 
     <#
-    .SYNOPSIS
-        Brief description.
-    .DESCRIPTION
-        Detailed description.
     #>
-    [PSCustomObject] GetMessageHash() {
-        return $this.MessageHash
-    }
-
-    <#
-    .SYNOPSIS
-        Brief description.
-    .DESCRIPTION
-        Detailed description.
-    #>
-    [LogLevel] GetLogLevel() {
-        return $this.LogLevel
-    }
-
-    <#
-    .SYNOPSIS
-        Brief description.
-    .DESCRIPTION
-        Detailed description.
-    #>
-    [int] GetMessageLength() {
-        return $this.MessageLength
-    }
-
-    <#
-    .SYNOPSIS
-        Brief description.
-    .DESCRIPTION
-        Detailed description.
-    #>
-    [datetime] GetTimestamp() {
-        return $this.Timestamp
+    [void] Stop() {
+        foreach ($loggingThread in $this.LoggingThreads) {
+            $loggingThread.Stop()
+        }
     }
 }
 
 # -------------------------------------------------------------------------
-# End: Class Definition - LogMessage
+# End: Class Definition - Logger
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Start: Class Definition - README
+# -------------------------------------------------------------------------
+# Description
+
+# -------------------------------------------------------------------------
+# End: Class Definition - README
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
 # Start: Enum Definition - LogLevel
@@ -918,19 +977,19 @@ enum LogLevel {
 # End: Enum Definition - LogLevel
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
-# Start: Enum Definition - RollingPolicy
+# Start: Enum Definition - RolloverPolicy
 # -------------------------------------------------------------------------
-enum RollingPolicy {
-    NONE
+enum RolloverPolicy {
+    NONE = 0
+    MINUTE = 1
+    HOURLY = 60
+    DAILY = 1440
+    WEEKLY = 10080
     SIZE
-    MINUTE
-    HOURLY
-    DAILY
-    WEEKLY
 }
 
 # -------------------------------------------------------------------------
-# End: Enum Definition - RollingPolicy
+# End: Enum Definition - RolloverPolicy
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
 # Start: Enum Definition - Status
@@ -1142,27 +1201,6 @@ function New-LogMessage() {
 # End: Public Function - New-LogMessage
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
-# Start: Public Function - Set-FileNameCounter
-# -------------------------------------------------------------------------
-function Set-FileNameCounter {
-    param (
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][String]$FileName,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][int]$Counter
-    )
-
-    $matchResults = [regex]::Match($FileName, "(.*)([0-9])([.].*)")
-
-    if ($matchResults.Success) {
-        return $matchResults.Groups[1].Value + $Counter + $matchResults.Groups[3].Value
-    } else {
-        return $FileName
-    }
-}
-
-# -------------------------------------------------------------------------
-# End: Public Function - Set-FileNameCounter
-# -------------------------------------------------------------------------
-# -------------------------------------------------------------------------
 # Start: Public Function - Write-Debug
 # -------------------------------------------------------------------------
 function Write-Debug {
@@ -1192,4 +1230,4 @@ function Write-Info {
 # -------------------------------------------------------------------------
 # End: Public Function - Write-Info
 # -------------------------------------------------------------------------
-Export-ModuleMember -Function Add-FileNameCounter, Convert-ToTimestampFileName, Import-Config, New-Appender, New-LogMessage, Set-FileNameCounter, Write-Debug, Write-Info
+Export-ModuleMember -Function Add-FileNameCounter, Convert-ToTimestampFileName, Import-Config, New-Appender, New-LogMessage, Write-Debug, Write-Info

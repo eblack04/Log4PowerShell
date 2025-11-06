@@ -7,14 +7,15 @@
 	"appenders" : [ {
 			"type"              : "CSV",
 			"name"              : "csv1",
-			"datePattern"       : "yyyy-MM-dd HH:mm:ss.fff",
-			"headers"	        : "vCenter,Datacenter,Cluster,ResourcePool",
+			"datePattern"       : "yyyy-MM-dd HH:mm:ss",
+			"headers"	        : "Timestamp,vCenter,Datacenter,Cluster,ResourcePool",
 			"valuesMandatory"   : false,
 			"path"              : "C:/Users/EdwardBlackwell/Documents/logs",
 			"fileName"          : "csv-log.csv",
 			"append"            : true,
-			"rolloverPolicy"     : "daily",
-			"rolloverFileNumber" : 7,
+			"rolloverPolicy"     : "size",
+			"rolloverFileSize"   : "10Kb",
+			"rolloverFileNumber" : 5,
 			"logLevel"          : "DEBUG"
 		}, {
 			"type"              : "File",

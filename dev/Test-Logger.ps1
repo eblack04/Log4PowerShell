@@ -52,11 +52,19 @@ try {
     $logMessages += $logMessage
     $global:Logger.LogMessage($logMessage)
 
-    foreach ($i in 0..1000) {
-        foreach ($logMessage in $logMessages) {
-            Start-Sleep -Milliseconds 50
-            $global:Logger.LogMessage($logMessage)
-        }
+    foreach ($i in 0..10000) {
+        $logMessage = [LogMessage]::new($logHash1, [LogLevel]::DEBUG)
+        Start-Sleep -Milliseconds 50
+        $global:Logger.LogMessage($logMessage)
+        $logMessage = [LogMessage]::new($logHash2, [LogLevel]::DEBUG)
+        Start-Sleep -Milliseconds 50
+        $global:Logger.LogMessage($logMessage)
+        $logMessage = [LogMessage]::new($logHash3, [LogLevel]::DEBUG)
+        Start-Sleep -Milliseconds 50
+        $global:Logger.LogMessage($logMessage)
+        $logMessage = [LogMessage]::new($logHash4, [LogLevel]::DEBUG)
+        Start-Sleep -Milliseconds 50
+        $global:Logger.LogMessage($logMessage)
     }
 
 

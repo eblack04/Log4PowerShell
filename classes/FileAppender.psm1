@@ -12,7 +12,7 @@ using module "..\enums\RolloverPolicy.psm1"
 #>
 [NoRunspaceAffinity()]
 class FileAppender : Appender {
-    
+
     [string]$LogFilePath
 
     [RolloverPolicy]$RolloverPolicy = [RolloverPolicy]::NONE
@@ -50,6 +50,7 @@ class FileAppender : Appender {
             # file.
             if (!$Config.append -and (Test-Path -Path $this.LogFilePath -PathType Leaf)) {
                 Remove-Item -Path $this.LogFilePath
+                $this.addFileHeader()
             }
 
             Add-Content -Path $this.logFile -Value "Set LogFilePath to:  $($this.LogFilePath)"
@@ -60,6 +61,7 @@ class FileAppender : Appender {
             $this.RolloverPolicy = [RolloverPolicy]$Config.rolloverPolicy
             Add-Content -Path $this.logFile -Value "Rollover policy:  $($this.RolloverPolicy)" # Remove
             $this.LogFilePath = Add-FileNameCounter -FileName $this.LogFilePath -Counter $this.RolloverFileCounter
+            $this.addFileHeader()
             Add-Content -Path $this.logFile -Value "Set LogFilePath to:  $($this.LogFilePath)" # Remove
 
             Add-Content -Path $this.logFile -Value "Rollover file number:  $($this.RolloverFileNumber)" # Remove
@@ -74,23 +76,23 @@ class FileAppender : Appender {
         
     #>
     [void] LogMessage([LogMessage]$LogMessage) {
-        $formattedMessage = "$($LogMessage.GetTimestamp().ToString($this.DatePattern)): $($LogMessage.GetMessage())"
+        $formattedMessage = $this.formatMessage($LogMessage)
         
-        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog: $($this.LogFilePath):$formattedMessage"
+        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog: $($this.LogFilePath):$formattedMessage" # Remove
 
-        if ($this.RolloverPolicy) {
+        if ($this.RolloverPolicy -and $this.RolloverPolicy -ne [RolloverPolicy]::NONE) {
 
             $triggerRollover = $false
 
-            Add-Content -Path $this.logFile -Value "Rollover policy:  $($this.RolloverPolicy)" # Remove
+            #Add-Content -Path $this.logFile -Value "Rollover policy:  $($this.RolloverPolicy)" # Remove
             switch ($this.RolloverPolicy) {
                 ([RolloverPolicy]::SIZE) {
-                    Add-Content -Path $this.logFile -Value "Rollover policy is SIZE" # Remove
+                    #Add-Content -Path $this.logFile -Value "Rollover policy is SIZE" # Remove
                     
                     # If the size of the current log file is greater than the 
                     # configured limit, then roll the log file to the next one.
-                    Add-Content -Path $this.logFile -Value "File size: $((Get-ChildItem -Path $this.LogFilePath).Length)" # Remove
-                    Add-Content -Path $this.logFile -Value "Rollover file size: $($this.RolloverFileSize)" # Remove
+                    #Add-Content -Path $this.logFile -Value "File size: $((Get-ChildItem -Path $this.LogFilePath).Length)" # Remove
+                    #Add-Content -Path $this.logFile -Value "Rollover file size: $($this.RolloverFileSize)" # Remove
                     if(((Get-ChildItem -Path $this.LogFilePath).Length + $formattedMessage.Length) -gt $this.RolloverFileSize) {
                         $triggerRollover = $true
                     } 
@@ -98,6 +100,9 @@ class FileAppender : Appender {
                 ($_ -in @([RolloverPolicy]::MINUTE, [RolloverPolicy]::HOURLY, [RolloverPolicy]::DAILY,[RolloverPolicy]::WEEKLY)) {
                     $timeDifference = (Get-Date) - $this.LastRolloverTime
 
+                    # Use the value assigned to the rollover policy enumeration,
+                    # which is the value of the policy in minutes if the 
+                    # enumeration represents a time value.
                     if ($timeDifference.Minutes -gt $_.Value__) {
                         $triggerRollover = $true
                     }
@@ -106,17 +111,17 @@ class FileAppender : Appender {
 
             if ($triggerRollover) {
                 # This 'if' statement determines the index of the next file in the rollover list.
-                Add-Content -Path $this.logFile -Value "Log file $($this.LogFilePath) is greater than size $($this.RolloverFileSize)" # Remove
+                #Add-Content -Path $this.logFile -Value "Log file $($this.LogFilePath) is greater than size $($this.RolloverFileSize)" # Remove
                 if($this.RolloverFileCounter + 1 -gt $this.RolloverFileNumber) {
-                    Add-Content -Path $this.logFile -Value "Setting the RolloverFileCounter to 1" # Remove
+                    #Add-Content -Path $this.logFile -Value "Setting the RolloverFileCounter to 1" # Remove
                     $this.RolloverFileCounter = 1
                 } else {
-                    Add-Content -Path $this.logFile -Value "Setting the RolloverFileCounter to $($this.RolloverFileCounter + 1)" # Remove
+                    #Add-Content -Path $this.logFile -Value "Setting the RolloverFileCounter to $($this.RolloverFileCounter + 1)" # Remove
                     $this.RolloverFileCounter++
                 }
-                Add-Content -Path $this.logFile -Value "Rollover file counter: $($this.RolloverFileCounter)" # Remove
-                Add-Content -Path $this.logFile -Value "Log file path: $($this.LogFilePath)" # Remove
-                            
+                #Add-Content -Path $this.logFile -Value "Rollover file counter: $($this.RolloverFileCounter)" # Remove
+                #Add-Content -Path $this.logFile -Value "Log file path: $($this.LogFilePath)" # Remove
+
                 # This regular expression and 'if' statement removes the
                 # current rollover index from the name, and inserts the
                 # next one.
@@ -125,7 +130,7 @@ class FileAppender : Appender {
                     $this.LogFilePath = $matchResults.Groups[1].Value + $this.RolloverFileCounter + $matchResults.Groups[3].Value
                 }
 
-                Add-Content -Path $this.logFile -Value "Changed log file name to $($this.LogFilePath)" # Remove
+                #Add-Content -Path $this.logFile -Value "Changed log file name to $($this.LogFilePath)" # Remove
 
                 # After setting the log file name to the next name in 
                 # rollover list, delete the file if it currently 
@@ -133,11 +138,14 @@ class FileAppender : Appender {
                 if (Test-Path -Path $this.LogFilePath -PathType Leaf) {
                     Remove-Item -Path $this.LogFilePath
                 }
+
+                # Add the header, if one needs to be added, to the new file.
+                $this.addFileHeader()
             }
         }
 
         Add-Content -Path $this.LogFilePath -Value $formattedMessage
-        Add-Content -Path $this.logFile -Value "FileAppender::WriteLog:after writing:  $formattedMessage" # Remove
+        #Add-Content -Path $this.logFile -Value "FileAppender::WriteLog:after writing:  $formattedMessage" # Remove
     }
 
     <#
@@ -150,6 +158,9 @@ class FileAppender : Appender {
         foreach ($LogMessage in $LogMessages) {
             $this.LogMessage($LogMessage)
         }
+    }
+
+    hidden [void] addFileHeader() {
     }
 
     hidden [string] formatMessage([LogMessage]$LogMessage) {

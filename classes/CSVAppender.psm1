@@ -1,72 +1,74 @@
-using module ".\Appender.psm1"
+using module ".\FileAppender.psm1"
 using module ".\LogMessage.psm1"
 using module "..\enums\LogLevel.psm1"
 
 [NoRunspaceAffinity()]
-class CSVAppender : Appender {
-    
-    [string]$LogFilePath
+class CSVAppender : FileAppender {
 
     [string[]]$Headers
 
     [bool]$ValuesMandatory = $false
 
-    ########## Temp #########
-    [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\csv-appender.log"
-    #########################
+    ###### Temp ######
+    [string]$logFile = "C:\Users\EdwardBlackwell\Documents\logs\csv-appender.log" # Remove
+    ##################
 
     CSVAppender([object]$Config) : base($Config) {
-        if (-not $Config.path) { throw "No file path specified" }
-        if (-not $Config.fileName) { throw "No file name specified" }        
-
-        $this.LogFilePath = $Config.path + "/" + (Convert-ToTimestampFileName -FileName $Config.fileName)
-
-        # Delete the log file if the logger is not appending to an existing log
-        # file.
-        if (!$Config.append -and (Test-Path -Path $this.logFilePath -PathType Leaf)) {
-            Remove-Item -Path $this.logFilePath
-        }
-
         if ($Config.Headers) { $this.Headers = $Config.headers.Split(",") }
         if ($Config.ValuesMandatory) { $this.ValuesMandatory = $Config.valuesMandatory }
-
-        Add-Content -Path $this.LogFilePath -Value $Config.headers
-        Add-Content -Path $this.logFile -Value "Set logFilePath to:  $($this.logFilePath)"
+        Add-Content -Path $this.logFile -Value "CSVAppender::constructor::Headers  $($this.Headers)"
+        Add-Content -Path $this.logFile -Value "CSVAppender::constructor::ValuesMandatory  $($this.ValuesMandatory)"
     }
 
-    [void] LogMessage([LogMessage]$LogMessage) {
-        Add-Content -Path $this.logFile -Value "CSVAppender::LogMessage.GetMessage():  $($LogMessage.GetMessage()))"
+    hidden [void] addFileHeader() {
+        Add-Content -Path $this.logFile -Value "Adding headers: $($this.Config.headers) to file $($this.LogFilePath)"
+        Add-Content -Path $this.LogFilePath -Value $this.Config.headers
+    }
 
+    <#
+    .SYNOPSIS
+        
+    .DESCRIPTION
+    #>
+    hidden [string] formatMessage([LogMessage]$LogMessage) {
         $containsAllKeys = $true
         $messageValues = @()
+        $csvMessage = $LogMessage.GetMessage()
 
         # This 'for' loop retrieves all the values for each column in the CSV
         # file.  If any of the column values are missing, then the log entry is
         # skipped.
         foreach ($header in $this.Headers) {
-            $messageValue = $LogMessage.GetMessageHash()[$header]
+            if ($header -eq "Timestamp") {
+                Add-Content -Path $this.logFile -Value "Date pattern:  $($this.DatePattern)"
+                Add-Content -Path $this.logFile -Value "Timestamp from message:  $($this.Timestamp)"
+                $messageValue = $LogMessage.GetTimestamp().ToString($this.DatePattern)
+            } else {
+                Add-Content -Path $this.logFile -Value "Joining the fields"
+                $messageValue = $LogMessage.GetMessageHash()[$header]
+            }
 
             if ($messageValue) {
+                Add-Content -Path $this.logFile -Value "messageValue:  $messageValue"
                 $messageValues += $messageValue
             } else {
+                Add-Content -Path $this.logFile -Value "messageValue not found"
                 $messageValues += ""
                 $containsAllKeys = $false
             }
         }
 
         if (($containsAllKeys -and $this.ValuesMandatory) -or (-not $this.ValuesMandatory)) {
+            Add-Content -Path $this.logFile -Value "Joining the fields"
             $csvMessage = $messageValues -Join ","
-            Add-Content -Path $this.logFile -Value "CSVAppender::LogMessage:  $csvMessage)"
-
-            # After processing all the properties, just returned the array as a 
-            # joined string.
-            Add-Content -Path $this.logFilePath -Value $csvMessage
         }
+
+        Add-Content -Path $this.logFile -Value "csvMessage:  $csvMessage"
+
+        return $csvMessage
     }
 
-    [void] LogMessages([LogMessage[]]$LogMessages) {
-        foreach ($logMessage in $LogMessages) {
-            $this.LogMessage($logMessage)
-        }
+    hidden [void] endFile([string] $footer) {
+
     }
 }
