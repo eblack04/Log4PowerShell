@@ -91,6 +91,60 @@ The `file` appender sends log messages to a specific text file.  The following p
 | `rollingFileSize` | If the `rollingPolicy` parameter is set to `size`, and the current log file's size reaches the size set for this parameter, then a new log file is started.  Specific byte numbers can be specified, or terms such as `10Mb` or `5Gb` can be listed as well. |
 | `rollingFileNumber` | The number of rolling files to maintain should a rolling policy be specified. |
 
+### The CSV Appender
+The `csv` appender sends log messages to a specific CSV file.  The following parameters are available:
+
+| Name         | Description |
+| ------------ | ----------- |
+| `type` | Must be set to `CSV` |
+| `name` | A unique name to give the appender. |
+| `path` | The directory path where the generated log file(s) will be created. |
+| `fileName` | The name of the log file to send log messages to.  The name string can have a date pattern in it bounded by the characters `d{<date pattern>}`.  This allows for the generation of unique names.  For example, the string `"file-%d{MM-dd-yyyy-HH-mm-ss}.log"` is a valid log file name pattern. |
+| `append` | A boolean value that tells the appender to either append or not append the log messages to the current version of the log file specified by the `fileName` parameter. |
+| `datePattern` | The date string pattern to use when formatting the timestamp portion of a generated log message. |
+| `logLevel` | The logging level to use when determining whether or not log messages are added to the log file. |
+| `headers` | A comma-separated list of strings that are parsed into the headers for the columns within the CSV file.  The order of the headers are in the order added to the CSV file. |
+| `valuesMandatory` | If this boolean parameters is set to `true`, then log messages sent to this appender must have ALL the parameters listed in the headers list in order to be added to the CSV file. |
+| `rollingPolicy` | Specifies the type of rolling file policy to apply to the log file.  If this parameter is not specified or set to `none`, then the rolling file functionality will not be triggered.  Current values for the policy are:  `none`, `minute`, `hourly`, `daily`, `weekly`, and `size`. |
+| `rollingFileSize` | If the `rollingPolicy` parameter is set to `size`, and the current log file's size reaches the size set for this parameter, then a new log file is started.  Specific byte numbers can be specified, or terms such as `10Mb` or `5Gb` can be listed as well. |
+| `rollingFileNumber` | The number of rolling files to maintain should a rolling policy be specified. |
+
+### The Google Chat Appender
+The `googleChat` appender sends log messages to a specific Google Chat channel.  The following parameters are available:
+
+| Name         | Description |
+| ------------ | ----------- |
+| `type` | Must be set to `GoogleChat` |
+| `name` | A unique name to give the appender. |
+| `path` | The directory path where the generated log file(s) will be created. |
+| `datePattern` | The date string pattern to use when formatting the timestamp portion of a generated log message. |
+| `logLevel` | The logging level to use when determining whether or not log messages are added to the log file. |
+| `webhookUrl` | The webhook URL for the Google Chat channel that log messages will be sent to. |
+| `maxRetryAttempts` | The number of attempts to make when previous attempts to send the log message to the Google Chat channel fails. |
+| `retryInterval` | The amount of time to wait between attempts to send the log message. |
+
+### Log Message Batching
+If an appender might take a while to process or send a message to whatever endpoint is configured for it, then it might be necessary to batch together log messages and send them all at once, which can cut down on the number of times an appender receives individual messages.  A good example of an appender where this might be necessary is the Google Chat appender as it makes a REST call to the Google Chat channel when sending a log message, but all appenders can receive batching configuration.  In order to configure an appender to batch log messages add a `batchConfig` section to the appender configuration.  The following JSON configuration is an example using batching:
+
+```json
+{
+	"type"              : "GoogleChat",
+	"name"              : "googleChat1",
+	"webhookUrl"        : "https://chat.googleapis.com/v1/spaces/AAQA_2CyzVs/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=B4hawzNnqxiS_E5vpvFgZ0l5TlXFND6KGvTv5BEV2PQ",
+	"datePattern"       : "yyyy-MM-dd HH:mm:ss.fff",
+	"logLevel"          : "DEBUG",
+	"maxRetryAttempts"  : 10,
+	"retryInterval"     : 10,
+	"batchConfig"       : {
+		"batchInterval"    : 5,
+		"maxBatchSize"     : 50,
+		"maxMessageLength" : 500
+	}
+}
+```
+
+<add table explaining batch parameters>
+
 ## Start-Logging.ps1
 The Start-Logging.ps1 script is the script used to start the logging system.  It creates an instance of the **Logger** class, and stores it into the global scope.  The following sequence digram outlines the actual steps involved when the script is executed.
 
