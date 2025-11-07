@@ -2,9 +2,10 @@ using module "../enums/LogLevel.psm1"
 
 <#
 .SYNOPSIS
-    Brief description.
+    The object representing a single log message.
 .DESCRIPTION
-    Detailed description.
+    This class encapsulates all information that comprises a single logging
+    message handled by this framework.
 #>
 [NoRunspaceAffinity()]
 class LogMessage {
@@ -22,9 +23,12 @@ class LogMessage {
 
     <#
     .SYNOPSIS
-        Brief description.
+        A constructor that sets a single message string as the contents of the 
+        log message.
     .DESCRIPTION
-        Detailed description.
+        The string message passed into this constructor is added to the internal
+        hash object with the key "Message", and used to establish the length of
+        the message.
     #>
     LogMessage([string]$Message, [LogLevel]$LogLevel) {
         if(!$Message) {
@@ -70,9 +74,12 @@ class LogMessage {
 
     <#
     .SYNOPSIS
-        Brief description.
+        Returns the log message contained within an instance of this class.
     .DESCRIPTION
-        Detailed description.
+        If this class contains only a message string for the log message, then 
+        that message is returned; otherwise, all entries in the message hash
+        are iterated over, formatted into "name = value" strings, concatenated
+        together, and returned as a single string.
     #>
     [string] GetMessage() { 
         Write-Host "this.MessageHash.Keys.Count:  $($this.MessageHash.Keys.Count)"
@@ -97,9 +104,9 @@ class LogMessage {
 
     <#
     .SYNOPSIS
-        Brief description.
+        Getter method that returns the message hash object.
     .DESCRIPTION
-        Detailed description.
+        Getter method that returns the message hash object.
     #>
     [PSCustomObject] GetMessageHash() {
         return $this.MessageHash
@@ -107,9 +114,9 @@ class LogMessage {
 
     <#
     .SYNOPSIS
-        Brief description.
+        Getter method that returns the message log level.
     .DESCRIPTION
-        Detailed description.
+        Getter method that returns the message log level.
     #>
     [LogLevel] GetLogLevel() {
         return $this.LogLevel
@@ -117,9 +124,9 @@ class LogMessage {
 
     <#
     .SYNOPSIS
-        Brief description.
+        Getter method that returns the message length.
     .DESCRIPTION
-        Detailed description.
+        Getter method that returns the message length.
     #>
     [int] GetMessageLength() {
         return $this.MessageLength
@@ -127,9 +134,9 @@ class LogMessage {
 
     <#
     .SYNOPSIS
-        Brief description.
+        Getter method that returns the message timestamp.
     .DESCRIPTION
-        Detailed description.
+        Getter method that returns the message timestamp.
     #>
     [datetime] GetTimestamp() {
         return $this.Timestamp

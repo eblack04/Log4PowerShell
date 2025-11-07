@@ -67,8 +67,4 @@ class CSVAppender : FileAppender {
 
         return $csvMessage
     }
-
-    hidden [void] endFile([string] $footer) {
-
-    }
 }

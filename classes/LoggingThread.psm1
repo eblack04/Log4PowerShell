@@ -107,7 +107,7 @@ class LoggingThread {
 
     <#
     .SYNOPSIS
-        Brief description.
+        Starts the inner ThreadJob object to listen for incoming log messages.
     .DESCRIPTION
         Detailed description.
     #>

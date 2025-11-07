@@ -1,15 +1,61 @@
 # Getting Started
-The Log4PowerShell logging application provides a framework for creating log statements within PowerShell scripts, modules, and classes.  The implementation for this module is object-oriented, and is configured at runtime via a JSON configuration file.  The JSON configuration file allows a user to tailor the logging system to send log messages to a number of different types of supported endpoints.  Currently, the following types of endpoints are supported:
+The **Log4PowerShell** logging module provides a framework for creating log statements within PowerShell scripts, modules, and classes.  The implementation for this module is object-oriented, and is configured at runtime via a JSON configuration file.  The JSON configuration file allows a user to tailor the logging system to send log messages to a number of different types of supported endpoints.  Currently, the following types of endpoints are supported:
 
 * Text files.
 * CSV files.
 * Google Chat channels.
 
-The configuration supports the creation and use of more than one of each type of endpoint, as well as customizing the log message output and format to each endpoint.
+The configuration supports the creation and use of more than one of each type of endpoint, as well as customizing the log message output and format to each endpoint.  
 
-The Log4PowerShell logging framework places each endpoint processing object into its own PowerShell JobThread object, and uses a ConcurrentQueue within each thread object send log messages to the endpoint processing object, which is called an Appender.  The following class diagram outlines the objects used within the framework
+The **Log4PowerShell** logging framework places each endpoint processing object into its own PowerShell JobThread object, and uses a ConcurrentQueue within each thread object to send log messages to the endpoint processing object for processing.  The following class diagram outlines the objects used within the framework:
 
 ![Class Diagram](./doc/Class_Diagram_1.jpeg "Class Diagram")
+
+In addition to the core classes, there are a number of supporting, stand-alone cmdlets used to simplify the configuration, initialization, and use of the logging framework.  Each cmdlet is stored within its own .ps1 script file located within the **public** directory of this project.
+
+# Classes
+As already mentioned, the **Log4PowerShell** logging framework is implemented using object-oriented design principles.  This section documents each class.
+
+## LogMessage
+
+The LogMessage class is the class that represents a logging message created and sent by a calling class into the **Log4PowerShell** logging framework.  
+
+<img src="./doc/LogMessage_Class_Diagram.jpeg" width="35%" alt="LogMessage Class Diagram">
+
+Each message contains the following pieces of information:
+
+| Name          | Type     | Description |
+| ------------- | -------- | ----------- |
+| Timestamp     | datetime | The time at which the log message was created. |
+| MessageHash   | object   | A map object that either contains the various name/value pairs that comprise the log message, or the single message represents the log message.
+| LogLevel      | LogLevel | The configured loging level for the log message.  This is one of the values within the LogLevel enumeration. |
+| MessageLength | int      | The number of bytes that make up the log message.  This number is derived in one of two ways.  First, if the message only contains a single message string, then the length of that string becomes the message length.  Second, if the message contains multiple name/value pairs within the message hash object, then the lengths of all names and values are combined together to arrive at the message length.  This value is used primarily for message batching functionality. |
+
+## Logger
+
+The Logger class is the class that is used by all external applications to perform logging.  Although an instance of this class can be created by a calling application, it is recommended to use the **Start-Logging.ps1** script located within the root directory of this application.  This script creates an instance of the Logger class, and places it within the global scope of the current PowerShell session.
+
+<img src="./doc/Logger_Class_Diagram.jpeg" width="25%" alt="Logger Class Diagram">
+
+The **Logger** class contains the following attributes:
+
+| Name            | Type            | Description |
+| --------------- | --------------- | ----------- |
+| LoggingThreads  | LoggingThread[] | A list of the ThreadJob objects that process logging messages sent to the Logger object. |
+| ConsoleLogLevel | LogLevel        | The logging level for the console output from an application utilizing the logging framework. |
+| ConsolePattern  | string          | The timestamp date pattern used for log messages sent to the console. |
+| ConsoleEnabled  | bool            | A flag indicating whether or not to send log messages to the console. |
+
+
+## LoggingThread
+
+[Description]
+
+## Appender
+
+[Description]
+
+## FileAppender
 
 In order to use the logging framework after the configuration has been determined and entered into the JSON file, simply run the **Start-Logging.ps1** script in the root directory of the module in order to create the main logger object from the JSON file, and load it into the global scope for the current PowerShell session.  The logger object can then be used directly from the global scope to send log messages, but it is recommended to use the utility functions in the public directory to perform logging tasks as they simplify use greatly.
 

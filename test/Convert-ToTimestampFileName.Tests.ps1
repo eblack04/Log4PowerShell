@@ -1,4 +1,7 @@
-Describe "Convert-ToDateFileName" {
+
+using module "../modules/Log4PowerShell.psm1"
+
+Describe "Convert-ToTimestampFileName" {
     Context "When called with valid input" {
         It "Should return the correct result" {
             # Arrange: Set up the environment and input
@@ -10,7 +13,7 @@ Describe "Convert-ToDateFileName" {
             Write-Host "formattedFileName:  $formattedFileName"
 
             # Act: Call the function being tested
-            $outputFormattedFileName = Convert-ToDateFileName -FileName $unformattedFileName
+            $outputFormattedFileName = Convert-ToTimestampFileName -FileName $unformattedFileName
             Write-Host "outputFormattedFileName:  $outputFormattedFileName"
 
             # Assert: Verify the output
