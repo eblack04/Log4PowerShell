@@ -32,8 +32,9 @@ class CSVAppender : FileAppender {
     #>
     hidden [string] formatMessage([LogMessage]$LogMessage) {
         $containsAllKeys = $true
+        $containsNonTimestampValue = $false
         $messageValues = @()
-        $csvMessage = $LogMessage.GetMessage()
+        $csvMessage = $null#$LogMessage.GetMessage()
 
         # This 'for' loop retrieves all the values for each column in the CSV
         # file.  If any of the column values are missing, then the log entry is
@@ -44,12 +45,14 @@ class CSVAppender : FileAppender {
                 Add-Content -Path $this.logFile -Value "Timestamp from message:  $($this.Timestamp)"
                 $messageValue = $LogMessage.GetTimestamp().ToString($this.DatePattern)
             } else {
-                Add-Content -Path $this.logFile -Value "Joining the fields"
                 $messageValue = $LogMessage.GetMessageHash()[$header]
+                Add-Content -Path $this.logFile -Value "messageValue:  $messageValue"
+                if($messageValue) { $containsNonTimestampValue = $true }
+                Add-Content -Path $this.logFile -Value "containsNonTimestampValue:  $containsNonTimestampValue"
             }
 
             if ($messageValue) {
-                Add-Content -Path $this.logFile -Value "messageValue:  $messageValue"
+                Add-Content -Path $this.logFile -Value "messageValue is not null:  $messageValue"
                 $messageValues += $messageValue
             } else {
                 Add-Content -Path $this.logFile -Value "messageValue not found"
@@ -58,7 +61,16 @@ class CSVAppender : FileAppender {
             }
         }
 
-        if (($containsAllKeys -and $this.ValuesMandatory) -or (-not $this.ValuesMandatory)) {
+        #=======================================================================
+        # Okay, this if statement adds an entry to the CSV file under the
+        # following two conditions:
+        #
+        # 1.  All columns have values and the ValuesMandatory flag is 'true'.
+        # 2.  There is at least one non-timestamp column with a value, and the 
+        #     ValuesMandatory flag is 'false'.
+        #=======================================================================
+        if (($containsAllKeys -and $this.ValuesMandatory) -or `
+            ((-not $this.ValuesMandatory) -and (($messageValues -join "").length -gt 0) -and $containsNonTimestampValue)) {
             Add-Content -Path $this.logFile -Value "Joining the fields"
             $csvMessage = $messageValues -Join ","
         }

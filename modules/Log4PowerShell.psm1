@@ -1,7 +1,7 @@
 # ====================================================================================
 # Module: Log4PowerShell
 # Version: 1.0
-# Generated: 11-06-2025 17:22:16
+# Generated: 11-10-2025 15:19:20
 # Description: Module for managing vSphere Lifecycle
 # ====================================================================================
 # -------------------------------------------------------------------------
@@ -10,9 +10,10 @@
 
 <#
 .SYNOPSIS
-    Brief description.
+    The object representing a single log message.
 .DESCRIPTION
-    Detailed description.
+    This class encapsulates all information that comprises a single logging
+    message handled by this framework.
 #>
 [NoRunspaceAffinity()]
 class LogMessage {
@@ -30,11 +31,14 @@ class LogMessage {
 
     <#
     .SYNOPSIS
-        Brief description.
+        A constructor that sets a single message string as the contents of the 
+        log message.
     .DESCRIPTION
-        Detailed description.
+        The string message passed into this constructor is added to the internal
+        hash object with the key "Message", and used to establish the length of
+        the message.
     #>
-    LogMessage([string]$Message, [LogLevel]$LogLevel) {
+    LogMessage([object]$Message, [LogLevel]$LogLevel) {
         if(!$Message) {
             throw "no message specified"
         }
@@ -43,50 +47,36 @@ class LogMessage {
             throw "no log level specified"
         }
 
+        if($Message -is [string]) {
+            $this.MessageHash = @{}
+            $this.MessageHash.Message = $Message
+            $this.MessageLength = $Message.Length
+        } else {
+            $this.MessageHash = $Message
+            
+            foreach ($property in $this.MessageHash.GetEnumerator()) {
+                $this.MessageLength += $property.Name.Length + $property.Value.Length
+            }
+        }
+
         $this.Timestamp = Get-Date
-        $this.MessageHash = @{}
-        $this.MessageHash.Message = $Message
         $this.LogLevel = $LogLevel
-        $this.MessageLength = $Message.Length
     }
 
     <#
     .SYNOPSIS
-        A LogMessage constructor that accepts a hash message directly.
+        Returns the log message contained within an instance of this class.
     .DESCRIPTION
-        This constructor accepts a message hash object and the logging level for
-        the message.  The hash object becomes the body of the message, and it is
-        up to the appenders to utilize the hash for logging purposes.
-    #>
-    LogMessage([object]$MessageHash, [LogLevel]$LogLevel) {
-        if(!$MessageHash) {
-            throw "no message hash specified"
-        }
-
-        if(!$LogLevel) {
-            throw "no log level specified"
-        }
-
-        $this.Timestamp = Get-Date
-        $this.MessageHash = $MessageHash
-        $this.LogLevel = $LogLevel
-        
-        foreach ($property in $this.MessageHash.GetEnumerator()) {
-            $this.MessageLength += $property.Name.Length + $property.Value.Length
-        }
-    }
-
-    <#
-    .SYNOPSIS
-        Brief description.
-    .DESCRIPTION
-        Detailed description.
+        If this class contains only a message string for the log message, then 
+        that message is returned; otherwise, all entries in the message hash
+        are iterated over, formatted into "name = value" strings, concatenated
+        together, and returned as a single string.
     #>
     [string] GetMessage() { 
         Write-Host "this.MessageHash.Keys.Count:  $($this.MessageHash.Keys.Count)"
-        Write-Host "this.MessageHash.ContainsKey(`"Message`"):  $($this.MessageHash.ContainsKey("Message"))"
+        Write-Host "this.MessageHash.ContainsKey(`"Message`"):  $($this.MessageHash.Contains("Message"))"
 
-        if ($this.MessageHash.Keys.Count -eq 1 -and $this.MessageHash.ContainsKey("Message")) {
+        if ($this.MessageHash.Keys.Count -eq 1 -and $this.MessageHash.Contains("Message")) {
             return $this.MessageHash.Message
         } else {
             $messageText = ""
@@ -105,9 +95,9 @@ class LogMessage {
 
     <#
     .SYNOPSIS
-        Brief description.
+        Getter method that returns the message hash object.
     .DESCRIPTION
-        Detailed description.
+        Getter method that returns the message hash object.
     #>
     [PSCustomObject] GetMessageHash() {
         return $this.MessageHash
@@ -115,9 +105,9 @@ class LogMessage {
 
     <#
     .SYNOPSIS
-        Brief description.
+        Getter method that returns the message log level.
     .DESCRIPTION
-        Detailed description.
+        Getter method that returns the message log level.
     #>
     [LogLevel] GetLogLevel() {
         return $this.LogLevel
@@ -125,9 +115,9 @@ class LogMessage {
 
     <#
     .SYNOPSIS
-        Brief description.
+        Getter method that returns the message length.
     .DESCRIPTION
-        Detailed description.
+        Getter method that returns the message length.
     #>
     [int] GetMessageLength() {
         return $this.MessageLength
@@ -135,9 +125,9 @@ class LogMessage {
 
     <#
     .SYNOPSIS
-        Brief description.
+        Getter method that returns the message timestamp.
     .DESCRIPTION
-        Detailed description.
+        Getter method that returns the message timestamp.
     #>
     [datetime] GetTimestamp() {
         return $this.Timestamp
@@ -379,7 +369,7 @@ class FileAppender : Appender {
             }
         }
 
-        Add-Content -Path $this.LogFilePath -Value $formattedMessage
+        if($formattedMessage) { Add-Content -Path $this.LogFilePath -Value $formattedMessage }
         #Add-Content -Path $this.logFile -Value "FileAppender::WriteLog:after writing:  $formattedMessage" # Remove
     }
 
@@ -440,8 +430,9 @@ class CSVAppender : FileAppender {
     #>
     hidden [string] formatMessage([LogMessage]$LogMessage) {
         $containsAllKeys = $true
+        $containsNonTimestampValue = $false
         $messageValues = @()
-        $csvMessage = $LogMessage.GetMessage()
+        $csvMessage = $null#$LogMessage.GetMessage()
 
         # This 'for' loop retrieves all the values for each column in the CSV
         # file.  If any of the column values are missing, then the log entry is
@@ -452,12 +443,14 @@ class CSVAppender : FileAppender {
                 Add-Content -Path $this.logFile -Value "Timestamp from message:  $($this.Timestamp)"
                 $messageValue = $LogMessage.GetTimestamp().ToString($this.DatePattern)
             } else {
-                Add-Content -Path $this.logFile -Value "Joining the fields"
                 $messageValue = $LogMessage.GetMessageHash()[$header]
+                Add-Content -Path $this.logFile -Value "messageValue:  $messageValue"
+                if($messageValue) { $containsNonTimestampValue = $true }
+                Add-Content -Path $this.logFile -Value "containsNonTimestampValue:  $containsNonTimestampValue"
             }
 
             if ($messageValue) {
-                Add-Content -Path $this.logFile -Value "messageValue:  $messageValue"
+                Add-Content -Path $this.logFile -Value "messageValue is not null:  $messageValue"
                 $messageValues += $messageValue
             } else {
                 Add-Content -Path $this.logFile -Value "messageValue not found"
@@ -466,7 +459,22 @@ class CSVAppender : FileAppender {
             }
         }
 
-        if (($containsAllKeys -and $this.ValuesMandatory) -or (-not $this.ValuesMandatory)) {
+        #=======================================================================
+        # Okay, this if statement adds an entry to the CSV file under the
+        # following two conditions:
+        #
+        # 1.  All columns have values and the ValuesMandatory flag is 'true'.
+        # 2.  There is at lest one column with a value, and the ValuesMandatory
+        #     flag is 'false'.
+        #=======================================================================
+        $containsAllAndValuesMandatory = ($containsAllKeys -and $this.ValuesMandatory)
+        Add-Content -Path $this.logFile -Value "containsAllAndValuesMandatory:  $containsAllAndValuesMandatory"
+        $notValuesMandatory = -not $this.ValuesMandatory
+        Add-Content -Path $this.logFile -Value "notValuesMandatory:  $notValuesMandatory"
+        $noValues = (($messageValues -join "").length -gt 0) -and $containsNonTimestampValue
+        Add-Content -Path $this.logFile -Value "noValues:  $noValues"
+
+        if ( ($containsAllKeys -and $this.ValuesMandatory) -or ((-not $this.ValuesMandatory) -and (($messageValues -join "").length -gt 0) -and $containsNonTimestampValue)) {
             Add-Content -Path $this.logFile -Value "Joining the fields"
             $csvMessage = $messageValues -Join ","
         }
@@ -474,10 +482,6 @@ class CSVAppender : FileAppender {
         Add-Content -Path $this.logFile -Value "csvMessage:  $csvMessage"
 
         return $csvMessage
-    }
-
-    hidden [void] endFile([string] $footer) {
-
     }
 }
 
@@ -728,7 +732,7 @@ class LoggingThread {
 
     <#
     .SYNOPSIS
-        Brief description.
+        Starts the inner ThreadJob object to listen for incoming log messages.
     .DESCRIPTION
         Detailed description.
     #>
@@ -1160,6 +1164,15 @@ function Import-Config {
 # Start: Public Function - New-Appender
 # -------------------------------------------------------------------------
 
+<#
+.SYNOPSIS
+    A factory function that creates an appender from an appender configuration.
+.DESCRIPTION
+    When an appender configuration is retrieved from the logging system JSON
+    file, the configuration can be passed into this function, and an appropriate
+    appender implementation created from the configuration.  the appender object
+    is them returned.
+#>
 function New-Appender() {
     param (
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][Object]$Config
@@ -1190,8 +1203,8 @@ function New-LogMessage() {
     #>
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string]$Message,
-        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][LogLevel]$LogLevel
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][object]$Message,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][LogLevel]$LogLevel
     )
 
     return [LogMessage]::new($Message, $LogLevel)
@@ -1205,7 +1218,7 @@ function New-LogMessage() {
 # -------------------------------------------------------------------------
 function Write-Debug {
     param (
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][String]$Message
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][object]$Message
     )
 
     $logMessage = [LogMessage]::new($Message, [LogLevel]::DEBUG)
@@ -1220,7 +1233,7 @@ function Write-Debug {
 # -------------------------------------------------------------------------
 function Write-Info {
     param (
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][String]$Message
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][object]$Message
     )
 
     $logMessage = [LogMessage]::new($Message, [LogLevel]::INFO)

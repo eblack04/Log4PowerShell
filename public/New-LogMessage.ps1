@@ -14,8 +14,8 @@ function New-LogMessage() {
     #>
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string]$Message,
-        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][LogLevel]$LogLevel
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][object]$Message,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][LogLevel]$LogLevel
     )
 
     return [LogMessage]::new($Message, $LogLevel)

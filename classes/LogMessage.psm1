@@ -30,7 +30,7 @@ class LogMessage {
         hash object with the key "Message", and used to establish the length of
         the message.
     #>
-    LogMessage([string]$Message, [LogLevel]$LogLevel) {
+    LogMessage([object]$Message, [LogLevel]$LogLevel) {
         if(!$Message) {
             throw "no message specified"
         }
@@ -39,37 +39,20 @@ class LogMessage {
             throw "no log level specified"
         }
 
-        $this.Timestamp = Get-Date
-        $this.MessageHash = @{}
-        $this.MessageHash.Message = $Message
-        $this.LogLevel = $LogLevel
-        $this.MessageLength = $Message.Length
-    }
-
-    <#
-    .SYNOPSIS
-        A LogMessage constructor that accepts a hash message directly.
-    .DESCRIPTION
-        This constructor accepts a message hash object and the logging level for
-        the message.  The hash object becomes the body of the message, and it is
-        up to the appenders to utilize the hash for logging purposes.
-    #>
-    LogMessage([object]$MessageHash, [LogLevel]$LogLevel) {
-        if(!$MessageHash) {
-            throw "no message hash specified"
-        }
-
-        if(!$LogLevel) {
-            throw "no log level specified"
+        if($Message -is [string]) {
+            $this.MessageHash = @{}
+            $this.MessageHash.Message = $Message
+            $this.MessageLength = $Message.Length
+        } else {
+            $this.MessageHash = $Message
+            
+            foreach ($property in $this.MessageHash.GetEnumerator()) {
+                $this.MessageLength += $property.Name.Length + $property.Value.Length
+            }
         }
 
         $this.Timestamp = Get-Date
-        $this.MessageHash = $MessageHash
         $this.LogLevel = $LogLevel
-        
-        foreach ($property in $this.MessageHash.GetEnumerator()) {
-            $this.MessageLength += $property.Name.Length + $property.Value.Length
-        }
     }
 
     <#
@@ -83,9 +66,9 @@ class LogMessage {
     #>
     [string] GetMessage() { 
         Write-Host "this.MessageHash.Keys.Count:  $($this.MessageHash.Keys.Count)"
-        Write-Host "this.MessageHash.ContainsKey(`"Message`"):  $($this.MessageHash.ContainsKey("Message"))"
+        Write-Host "this.MessageHash.ContainsKey(`"Message`"):  $($this.MessageHash.Contains("Message"))"
 
-        if ($this.MessageHash.Keys.Count -eq 1 -and $this.MessageHash.ContainsKey("Message")) {
+        if ($this.MessageHash.Keys.Count -eq 1 -and $this.MessageHash.Contains("Message")) {
             return $this.MessageHash.Message
         } else {
             $messageText = ""

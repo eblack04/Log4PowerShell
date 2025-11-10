@@ -143,6 +143,15 @@ If an appender might take a while to process or send a message to whatever endpo
 }
 ```
 
+The batching section contains three different parameters that affect how messages are batched together and sent.  They are the following:
+
+
+| Name               | Description |
+| ------------------ | ----------- |
+| `batchInterval`    | The maximum amount of time in seconds that has to occur before a batched message is sent. |
+| `maxBatchSize`     | The maximum aount of messages that are batched together before they are sent as a single message. |
+| `maxMessageLength` | The maximum size in bytes that a batched message has to reach before it is sent. |
+
 <add table explaining batch parameters>
 
 ## Start-Logging.ps1
@@ -212,14 +221,17 @@ The **Logger** class contains the following attributes:
 
 
 ### LoggingThread
+The **LoggingThread** class is the workhorse object for the logging system.  This is the class that is in charge of receiving messages from the **Logger** and passing them to the concurrent queue where the internal thread receives the message, and processes it.
 
-[Description]
+<img src="./doc/LoggingThread_Class_Diagram.jpeg" width="20%" alt="LogingThread Class Diagram">
 
 ### Appender
 
 [Description]
 
 ### FileAppender
+
+[Description]
 
 In order to use the logging framework after the configuration has been determined and entered into the JSON file, simply run the **Start-Logging.ps1** script in the root directory of the module in order to create the main logger object from the JSON file, and load it into the global scope for the current PowerShell session.  The logger object can then be used directly from the global scope to send log messages, but it is recommended to use the utility functions in the public directory to perform logging tasks as they simplify use greatly.
 

@@ -1,6 +1,6 @@
 function Write-Debug {
     param (
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][String]$Message
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][object]$Message
     )
 
     $logMessage = [LogMessage]::new($Message, [LogLevel]::DEBUG)

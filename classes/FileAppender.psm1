@@ -144,7 +144,7 @@ class FileAppender : Appender {
             }
         }
 
-        Add-Content -Path $this.LogFilePath -Value $formattedMessage
+        if($formattedMessage) { Add-Content -Path $this.LogFilePath -Value $formattedMessage }
         #Add-Content -Path $this.logFile -Value "FileAppender::WriteLog:after writing:  $formattedMessage" # Remove
     }
 
