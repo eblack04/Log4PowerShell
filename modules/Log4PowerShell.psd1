@@ -18,7 +18,7 @@ ModuleVersion = '1.0'
 # CompatiblePSEditions = @()
 
 # ID used to uniquely identify this module
-GUID = '2cedab76-c43c-4e17-9dfa-c1e9e5db77bb'
+GUID = '87e409d4-df6e-4e2a-b83f-09058bb830f9'
 
 # Author of this module
 Author = 'Todd Blackwell'
@@ -69,8 +69,8 @@ PowerShellVersion = '7.4'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Add-FileNameCounter', 'Convert-ToTimestampFileName', 'Import-Config', 
-               'New-Appender', 'New-LogMessage', 'Write-Debug', 'Write-Info'
+FunctionsToExport = 'Convert-ToTimestampFileName', 'Import-Config', 'New-Appender', 
+               'New-LogMessage', 'Write-Debug', 'Write-Info'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = '*'

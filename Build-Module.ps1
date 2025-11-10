@@ -17,24 +17,31 @@
     After writing the .psm1 file, the script automatically generates a module 
     manifest (.psd1) using New-ModuleManifest.
 .PARAMETER ModuleName
-    The name of the module. The output folder will be named after the module, and the module
-    files will be named as <ModuleName>.psm1 and <ModuleName>.psd1. Default is 'Log4PowerShell'.
+    The name of the module. The output folder will be named after the module, 
+    and the module files will be named as <ModuleName>.psm1 and 
+    <ModuleName>.psd1. Default is 'Log4PowerShell'.
 .PARAMETER OutputFolder
-    The parent folder where the module folder will be created. Default is '.\Modules'.
+    The parent folder where the module folder will be created. Default is 
+    '.\Modules'.
 .PARAMETER ClassesFolder
-    The folder containing .ps1 files with class definitions. Default is '.\source\Classes'.
+    The folder containing .ps1 files with class definitions. Default is 
+    '.\source\Classes'.
 .PARAMETER PrivateFolder
-    The folder containing .ps1 files with private functions. Default is '.\source\Private'.
+    The folder containing .ps1 files with private functions. Default is 
+    '.\source\Private'.
 .PARAMETER PublicFolder
-    The folder containing .ps1 files with public functions. Default is '.\source\Public'.
+    The folder containing .ps1 files with public functions. Default is 
+    '.\source\Public'.
 .PARAMETER ModuleVersion
-    The version number to embed in the module header and manifest (e.g., '1.0.0'). This parameter is required.
+    The version number to embed in the module header and manifest (e.g., 
+    '1.0.0'). This parameter is required.
 .PARAMETER CompanyName
     The company name used for the manifest’s CompanyName.
 .PARAMETER Author
     The module author.
 .PARAMETER RequiredModules
-    An array of module names that your module depends on. Default is an empty array.
+    An array of module names that your module depends on. Default is an empty
+    array.
 .EXAMPLE
     .\Build-Module.ps1 -ModuleName 'TestModule' -ModuleVersion '1.0.0' -OutputFolder '.\Modules'
 #>
@@ -54,28 +61,33 @@ Param (
     [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string[]]$RequiredModules = @()
 )
 
-#------------------------------------------
 # Define full paths for the module script and manifest.
-#------------------------------------------
 $ModulePsm1Path = Join-Path -Path $OutputFolder -ChildPath ("$ModuleName.psm1")
 $ModuleManifestPath = Join-Path -Path $OutputFolder -ChildPath ("$ModuleName.psd1")
 
-#------------------------------------------
 # Build the module file content in memory.
-#------------------------------------------
 $script:ModuleContent = @()
 
 # Module Header
 $ModuleHeader = @"
-# ====================================================================================
+# ==============================================================================
 # Module: $ModuleName
 # Version: $ModuleVersion
 # Generated: $(Get-Date -Format 'MM-dd-yyyy HH:mm:ss')
 # Description: Module for managing vSphere Lifecycle
-# ====================================================================================
+# ==============================================================================
 "@
 $script:ModuleContent += $ModuleHeader
 
+<#
+.SYNOPSIS
+    Generates a class file list based on dependencies.
+.DESCRIPTION
+    This function iterates through all the class module files, and creates a 
+    list of the files based on dependencies between the files.  it ensures 
+    that all class files that are references by other files are alway listed
+    first in the overall, generated module code file.
+#>
 function Get-ClassModuleList {
     [CmdletBinding()]
     param (

@@ -1,1 +1,0 @@
-.\Build-Module.ps1 -ModuleVersion "1.0"

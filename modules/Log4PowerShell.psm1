@@ -1,9 +1,30 @@
 # ====================================================================================
 # Module: Log4PowerShell
 # Version: 1.0
-# Generated: 11-10-2025 15:19:20
+# Generated: 11-10-2025 16:40:41
 # Description: Module for managing vSphere Lifecycle
 # ====================================================================================
+# -------------------------------------------------------------------------
+# Start: Private Function - Add-FileNameCounter
+# -------------------------------------------------------------------------
+function Add-FileNameCounter {
+    param (
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][String]$FileName,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][int]$Counter
+    )
+
+    $matchResults = [regex]::Match($FileName, "(.*)(\..*)")
+
+    if ($matchResults.Success) {
+        return $matchResults.Groups[1].Value + "-" + $Counter + $matchResults.Groups[2].Value
+    } else {
+        return $FileName
+    }
+}
+
+# -------------------------------------------------------------------------
+# End: Private Function - Add-FileNameCounter
+# -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
 # Start: Class Definition - LogMessage
 # -------------------------------------------------------------------------
@@ -464,17 +485,11 @@ class CSVAppender : FileAppender {
         # following two conditions:
         #
         # 1.  All columns have values and the ValuesMandatory flag is 'true'.
-        # 2.  There is at lest one column with a value, and the ValuesMandatory
-        #     flag is 'false'.
+        # 2.  There is at least one non-timestamp column with a value, and the 
+        #     ValuesMandatory flag is 'false'.
         #=======================================================================
-        $containsAllAndValuesMandatory = ($containsAllKeys -and $this.ValuesMandatory)
-        Add-Content -Path $this.logFile -Value "containsAllAndValuesMandatory:  $containsAllAndValuesMandatory"
-        $notValuesMandatory = -not $this.ValuesMandatory
-        Add-Content -Path $this.logFile -Value "notValuesMandatory:  $notValuesMandatory"
-        $noValues = (($messageValues -join "").length -gt 0) -and $containsNonTimestampValue
-        Add-Content -Path $this.logFile -Value "noValues:  $noValues"
-
-        if ( ($containsAllKeys -and $this.ValuesMandatory) -or ((-not $this.ValuesMandatory) -and (($messageValues -join "").length -gt 0) -and $containsNonTimestampValue)) {
+        if (($containsAllKeys -and $this.ValuesMandatory) -or `
+            ((-not $this.ValuesMandatory) -and (($messageValues -join "").length -gt 0) -and $containsNonTimestampValue)) {
             Add-Content -Path $this.logFile -Value "Joining the fields"
             $csvMessage = $messageValues -Join ","
         }
@@ -1049,27 +1064,6 @@ enum TaskType {
 # End: Enum Definition - TaskType
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
-# Start: Public Function - Add-FileNameCounter
-# -------------------------------------------------------------------------
-function Add-FileNameCounter {
-    param (
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][String]$FileName,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][int]$Counter
-    )
-
-    $matchResults = [regex]::Match($FileName, "(.*)(\..*)")
-
-    if ($matchResults.Success) {
-        return $matchResults.Groups[1].Value + "-" + $Counter + $matchResults.Groups[2].Value
-    } else {
-        return $FileName
-    }
-}
-
-# -------------------------------------------------------------------------
-# End: Public Function - Add-FileNameCounter
-# -------------------------------------------------------------------------
-# -------------------------------------------------------------------------
 # Start: Public Function - Convert-ToTimestampFileName
 # -------------------------------------------------------------------------
 <#
@@ -1243,4 +1237,4 @@ function Write-Info {
 # -------------------------------------------------------------------------
 # End: Public Function - Write-Info
 # -------------------------------------------------------------------------
-Export-ModuleMember -Function Add-FileNameCounter, Convert-ToTimestampFileName, Import-Config, New-Appender, New-LogMessage, Write-Debug, Write-Info
+Export-ModuleMember -Function Convert-ToTimestampFileName, Import-Config, New-Appender, New-LogMessage, Write-Debug, Write-Info
