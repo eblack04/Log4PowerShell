@@ -7,92 +7,90 @@ using module "..\enums\LogLevel.psm1"
 class Logger {
 
     # The list of logging threads that manage the appenders.
-    [System.Collections.ArrayList]$loggingThreads = [System.Collections.ArrayList]::new()
+    [System.Collections.ArrayList]$LoggingThreads = [System.Collections.ArrayList]::new()
 
     # The log level for the console if it's enabled.
-    [LogLevel]$consoleLevel = [LogLevel]::INFO
+    [LogLevel]$ConsoleLevel = [LogLevel]::INFO
 
-    [string]$consolePattern = "yyyy-MM-dd HH:mm:ss.fff"
+    # The timestamp date pattern to use if logging is echoed to the console.
+    [string]$ConsoleDatePattern = "yyyy-MM-dd HH:mm:ss.fff"
 
-    [bool]$consoleEnabled = $false
+    # A boolean flag indicating whether or not logging is echoed to the console.
+    [bool]$ConsoleEnabled = $false
 
-    #===========================================================================
-    # Object constructor that sets the appenders for the log object, as well as
-    # setting the lovel level for the log object.
-    #===========================================================================
-    Logger ([object]$configFile) {
+    <#
+    .SYNOPSIS
+        The object constructor that configures the logging framework.
+    .DESCRIPTION
+        Object constructor that sets the appenders for the log object, as well 
+        as setting the lovel level for the log object.
+    #>
+    Logger ([object]$ConfigFile) {
 
-        $jsonContent = Get-Content -Path $configFile -Raw -Encoding UTF8
+        $jsonContent = Get-Content -Path $ConfigFile -Raw -Encoding UTF8
         $loggingConfig = $jsonContent | ConvertFrom-Json
         
         if ($loggingConfig.console.enabled) {
-            $this.consoleEnabled = $true
-            if ($loggingConfig.console.level) { $this.consoleLevel = [LogLevel]$loggingConfig.console.level }
-            if ($loggingConfig.console.pattern) { $this.consolePattern = [string]$loggingConfig.console.pattern }
+            $this.ConsoleEnabled = $true
+            if ($loggingConfig.console.logLevel) { $this.ConsoleLevel = [LogLevel]$loggingConfig.console.logLevel }
+            if ($loggingConfig.console.datePattern) { $this.ConsoleDatePattern = [string]$loggingConfig.console.datePattern }
         }
 
         foreach ($appenderConfig in $loggingConfig.appenders) {
-            Write-Host "Appender: $($appenderConfig.Name)"
-
-            $className = "$($appenderConfig.type)Appender"
-            $appender = New-Object -TypeName $className -ArgumentList $appenderConfig
-            $loggingThread = [LoggingThread]::new($appender)
-            if ($loggingConfig.batchConfig) {
-                $loggingThread.isBatched = $true
-                if ($loggingConfig.batchInterval) { $loggingThread.batchInterval = $loggingConfig.batchConfig.batchInterval }
-                if ($loggingConfig.maxBatchSize) { $loggingThread.maxBatchSize = $loggingConfig.batchConfig.maxBatchSize }
-                if ($loggingConfig.maxMessageLength) { $loggingThread.maxMessageLength = $loggingConfig.batchConfig.maxMessageLength }
-                if ($loggingConfig.retryInterval) { $loggingThread.retryInterval = $loggingConfig.batchConfig.retryInterval }
-            }
-            $this.loggingThreads += $loggingThread
+            $loggingThread = [LoggingThread]::new($appenderConfig)
+            $this.LoggingThreads += $loggingThread
         }
     }
 
     #===========================================================================
     # Method to add an appender instance.
     #===========================================================================
-    [void] AddAppender([Appender]$appender) {
-        if(!$appender) {
+    <#
+    .SYNOPSIS
+        A method to add an appender instance.
+    .DESCRIPTION
+        Adds an appender instance to the list of appenders controlled by this
+        object.
+    #>
+    [void] AddAppender([Appender]$Appender) {
+        if(!$Appender) {
             throw "No appender specified"
         }
 
-        $loggingThread = [LoggingThread]::new($appender)
-        $this.loggingThreads += $loggingThread
+        $loggingThread = [LoggingThread]::new($Appender)
+        $this.LoggingThreads += $loggingThread
     }
 
-    #===========================================================================
-    #
-    #===========================================================================
+    <#
+    #>
     [void] Start() {
-        foreach ($loggingThread in $this.loggingThreads) {
+        foreach ($loggingThread in $this.LoggingThreads) {
             $loggingThread.Start()
         }
     }
 
-    #===========================================================================
-    #
-    #===========================================================================
-    [void] LogMessage([LogMessage]$logMessage) {
-        if(!$logMessage) {
+    <#
+    #>
+    [void] LogMessage([LogMessage]$LogMessage) {
+        if(!$LogMessage) {
             throw "No log message specified"
         }
 
-        if ($this.consoleEnabled) {
-            if ($logMessage.GetLevel() -le $this.consoleLevel ) {
-                Write-Host "$((Get-Date).ToString($this.consolePattern)) :: $($logMessage.GetMessage())"
+        if ($this.ConsoleEnabled) {
+            if ($LogMessage.GetLogLevel() -le $this.ConsoleLevel ) {
+                Write-Host "$((Get-Date).ToString($this.ConsoleDatePattern)) :: $($LogMessage.GetMessage())"
             }
         }
 
-        foreach ($loggingThread in $this.loggingThreads) {
-            $loggingThread.LogMessage($logMessage)
+        foreach ($loggingThread in $this.LoggingThreads) {
+            $loggingThread.LogMessage($LogMessage)
         }
     }
 
-    #===========================================================================
-    #
-    #===========================================================================
+    <#
+    #>
     [void] Stop() {
-        foreach ($loggingThread in $this.loggingThreads) {
+        foreach ($loggingThread in $this.LoggingThreads) {
             $loggingThread.Stop()
         }
     }

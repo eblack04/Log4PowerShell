@@ -13,8 +13,8 @@
 			"path"              : "C:/Users/EdwardBlackwell/Documents/logs",
 			"fileName"          : "csv-log.csv",
 			"append"            : true,
-			"rolloverPolicy"     : "daily",
-			"rolloverFileNumber" : 7,
+			"rolloverPolicy"     : "none|size|minute|hourly|daily|weekly",
+			"rolloverFileNumber" : 5,
 			"logLevel"          : "DEBUG"
 		}, {
 			"type"              : "File",

@@ -1,40 +1,53 @@
 <#
 .SYNOPSIS
-    Builds a PowerShell module by concatenating script files from specified directories,
-    and outputs a module folder containing both a .psm1 file and a module manifest (.psd1).
+    Builds a PowerShell module from the project script and module files.
 .DESCRIPTION
-    This script creates a module folder (suitable for Publish-Module) by merging .ps1 files
-    from three source folders:
-      - Classes: Contains class definitions.
-      - Private: Contains private functions.
-      - Public: Contains public functions.
-    After writing the .psm1 file, the script automatically generates a module manifest (.psd1)
-    using New-ModuleManifest.
+    This script concatenates both script and module files from specified project
+    directories, and outputs the generated module (.psm1) and manifest (.psd1) 
+    files into the modules directory.
+
+    The source folders containing the project .psm1 and .ps1 files are as 
+    follows:
+
+      - enums: Contains enumeration definitions.
+      - classes: Contains class definitions.
+      - private: Contains private functions.
+      - public: Contains public functions.
+
+    After writing the .psm1 file, the script automatically generates a module 
+    manifest (.psd1) using New-ModuleManifest.
 .PARAMETER ModuleName
-    The name of the module. The output folder will be named after the module, and the module
-    files will be named as <ModuleName>.psm1 and <ModuleName>.psd1. Default is 'VMware.Lifecycle'.
+    The name of the module. The output folder will be named after the module, 
+    and the module files will be named as <ModuleName>.psm1 and 
+    <ModuleName>.psd1. Default is 'Log4PowerShell'.
 .PARAMETER OutputFolder
-    The parent folder where the module folder will be created. Default is '.\Modules'.
+    The parent folder where the module folder will be created. Default is 
+    '.\Modules'.
 .PARAMETER ClassesFolder
-    The folder containing .ps1 files with class definitions. Default is '.\source\Classes'.
+    The folder containing .ps1 files with class definitions. Default is 
+    '.\source\Classes'.
 .PARAMETER PrivateFolder
-    The folder containing .ps1 files with private functions. Default is '.\source\Private'.
+    The folder containing .ps1 files with private functions. Default is 
+    '.\source\Private'.
 .PARAMETER PublicFolder
-    The folder containing .ps1 files with public functions. Default is '.\source\Public'.
+    The folder containing .ps1 files with public functions. Default is 
+    '.\source\Public'.
 .PARAMETER ModuleVersion
-    The version number to embed in the module header and manifest (e.g., '1.0.0'). This parameter is required.
+    The version number to embed in the module header and manifest (e.g., 
+    '1.0.0'). This parameter is required.
 .PARAMETER CompanyName
     The company name used for the manifest’s CompanyName.
 .PARAMETER Author
     The module author.
 .PARAMETER RequiredModules
-    An array of module names that your module depends on. Default is an empty array.
+    An array of module names that your module depends on. Default is an empty
+    array.
 .EXAMPLE
     .\Build-Module.ps1 -ModuleName 'TestModule' -ModuleVersion '1.0.0' -OutputFolder '.\Modules'
 #>
 [CmdletBinding()]
 Param (
-    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$ModuleName = "VMware.Logging",
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$ModuleName = "Log4PowerShell",
     [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$OutputFolder = ".\modules",
     [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$ClassesFolder = ".\classes",
     [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string]$EnumsFolder = ".\enums",
@@ -48,27 +61,78 @@ Param (
     [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][string[]]$RequiredModules = @()
 )
 
-#------------------------------------------
 # Define full paths for the module script and manifest.
-#------------------------------------------
 $ModulePsm1Path = Join-Path -Path $OutputFolder -ChildPath ("$ModuleName.psm1")
 $ModuleManifestPath = Join-Path -Path $OutputFolder -ChildPath ("$ModuleName.psd1")
 
-#------------------------------------------
 # Build the module file content in memory.
-#------------------------------------------
 $script:ModuleContent = @()
 
 # Module Header
 $ModuleHeader = @"
-# ====================================================================================
+# ==============================================================================
 # Module: $ModuleName
 # Version: $ModuleVersion
 # Generated: $(Get-Date -Format 'MM-dd-yyyy HH:mm:ss')
 # Description: Module for managing vSphere Lifecycle
-# ====================================================================================
+# ==============================================================================
 "@
 $script:ModuleContent += $ModuleHeader
+
+<#
+.SYNOPSIS
+    Generates a class file list based on dependencies.
+.DESCRIPTION
+    This function iterates through all the class module files, and creates a 
+    list of the files based on dependencies between the files.  it ensures 
+    that all class files that are references by other files are alway listed
+    first in the overall, generated module code file.
+#>
+function Get-ClassModuleList {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)][ValidateScript({ Test-Path $_ })][String]$FilePath
+    )
+
+    $FilePath = Resolve-Path -Path $FilePath
+    $fileList = @()
+    $classModuleFiles = Get-ChildItem -Path $FilePath -File
+
+    # Iterate over each class module file in the given directory.
+    foreach ($classModuleFile in $classModuleFiles) {
+
+        # Grab the content of the current file.
+        $content = Get-Content -LiteralPath $classModuleFile.FullName -ErrorAction Stop
+
+        # Iterate over each line of the content.
+        $content | ForEach-Object {
+
+            # Search for the lines that use other modules.
+            $matchResults = [regex]::Match($_, 'using module ".*\\([\w]+.psm1)"$')
+            
+            # If a 'using module' line is found, then extract the module name 
+            # and add it to the list.
+            if ($matchResults.Success) {
+
+                # Grab the module name piece of the line.
+                $fileName = $FilePath + [System.IO.Path]::DirectorySeparatorChar + $matchResults.Groups[1].Value
+
+                # Check to make sure the module file is in the given directory,
+                # and that it isn't already in the list of module files.
+                if ((Test-Path $fileName) -and ($fileList -notcontains $fileName)) {
+                    $fileList += $fileName
+                }
+            }
+        }
+
+        # Finally, add the file that's currently being processed.
+        if ($fileList -notcontains $classModuleFile.FullName) {
+            $fileList += $classModuleFile.FullName
+        }
+    }
+
+    return $fileList
+}
 
 #------------------------------------------
 # Helper Function: Get-FileContent
@@ -153,11 +217,22 @@ foreach ($folder in @($ClassesFolder, $PrivateFolder, $PublicFolder)) {
 }
 
 #------------------------------------------
+# Merge Private function files.
+#------------------------------------------
+if (Test-Path -LiteralPath $PrivateFolder) {
+    Write-Host "Merging files in the $PrivateFolder folder"
+    $privateFiles = Get-ChildItem -Path $PrivateFolder -Filter '*.ps1' -File -ErrorAction SilentlyContinue
+    if ($privateFiles -and $privateFiles.Count -gt 0) {
+        Merge-Files -SectionName "Private Function" -Files $privateFiles 
+    }
+}
+
+#------------------------------------------
 # Merge class files.
 #------------------------------------------
 if (Test-Path -LiteralPath $ClassesFolder) {
     Write-Host "Merging files in the $ClassesFolder folder"
-    $classFiles = Get-ChildItem -Path $ClassesFolder -Filter '*.psm1' -File -ErrorAction SilentlyContinue
+    $classFiles = Get-ClassModuleList -FilePath $ClassesFolder
     if ($classFiles -and $classFiles.Count -gt 0) {
         Merge-Files -SectionName "Class Definition" -Files $classFiles
     }
@@ -171,17 +246,6 @@ if (Test-Path -LiteralPath $EnumsFolder) {
     $enumsFiles = Get-ChildItem -Path $EnumsFolder -Filter '*.psm1' -File -ErrorAction SilentlyContinue
     if ($enumsFiles -and $enumsFiles.Count -gt 0) {
         Merge-Files -SectionName "Enum Definition" -Files $enumsFiles
-    }
-}
-
-#------------------------------------------
-# Merge Private function files.
-#------------------------------------------
-if (Test-Path -LiteralPath $PrivateFolder) {
-    Write-Host "Merging files in the $PrivateFolder folder"
-    $privateFiles = Get-ChildItem -Path $PrivateFolder -Filter '*.ps1' -File -ErrorAction SilentlyContinue
-    if ($privateFiles -and $privateFiles.Count -gt 0) {
-        Merge-Files -SectionName "Private Function" -Files $privateFiles 
     }
 }
 

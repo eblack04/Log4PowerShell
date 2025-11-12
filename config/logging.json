@@ -2,16 +2,32 @@
 	"console" : {
 		"enabled"     : true,
 		"datePattern" : "yyyy-MM-dd HH:mm:ss.fff",
-		"level"       : "DEBUG"
+		"logLevel"       : "DEBUG"
 	},
 	"appenders" : [ {
-			"type"        : "File",
-			"name"        : "fileLogger1",
-			"path"        : "C:/Users/EdwardBlackwell/Documents/logs",
-			"fileName"    : "log-file.log",
-			"datePattern" : "yyyy-MM-dd HH:mm:ss.fff",
-			"level"       : "DEBUG",
-			"append"      : true
+			"type"              : "CSV",
+			"name"              : "csv1",
+			"datePattern"       : "yyyy-MM-dd HH:mm:ss",
+			"headers"	        : "Timestamp,vCenter,Datacenter,Cluster,ResourcePool",
+			"valuesMandatory"   : false,
+			"path"              : "C:/Users/EdwardBlackwell/Documents/logs",
+			"fileName"          : "csv-log.csv",
+			"append"            : true,
+			"rolloverPolicy"     : "size",
+			"rolloverFileSize"   : "10Kb",
+			"rolloverFileNumber" : 5,
+			"logLevel"          : "DEBUG"
+		}, {
+			"type"              : "File",
+			"name"              : "fileLogger1",
+			"path"              : "C:/Users/EdwardBlackwell/Documents/logs",
+			"fileName"          : "file-%d{MM-dd-yyyy-HH-mm-ss}-log.log",
+			"append"            : true,
+			"rolloverPolicy"     : "size",
+			"rolloverFileSize"   : "10Kb",
+			"rolloverFileNumber" : 5,
+			"datePattern"       : "yyyy-MM-dd HH:mm:ss.fff",
+			"logLevel"          : "DEBUG"
 		}
 	]
 }
