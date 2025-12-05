@@ -1,0 +1,2818 @@
+{
+	"info": {
+		"_postman_id": "3a878ccd-d4e7-41c7-a5ca-fdf3be9ed1ed",
+		"name": "vRA",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "ABX Actions",
+			"item": [
+				{
+					"name": "Get ABX Actions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/abx/api/resources/actions",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"abx",
+								"api",
+								"resources",
+								"actions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get ABX Action",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/abx/api/resources/actions/{{abxActionId}}",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"abx",
+								"api",
+								"resources",
+								"actions",
+								"{{abxActionId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Get Access Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);\r",
+									"postman.setEnvironmentVariable(\"refreshToken\", jsonData.refresh_token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"jason\",\r\n    \"password\": \"VMware1!\",\r\n    \"domain\": \"corp.local\"\r\n}"
+						},
+						"url": {
+							"raw": "https://{{hostName}}/csp/gateway/am/api/login?access_token",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"csp",
+								"gateway",
+								"am",
+								"api",
+								"login"
+							],
+							"query": [
+								{
+									"key": "access_token",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Bearer Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);\r",
+									"postman.setEnvironmentVariable(\"bearerToken\", jsonData.token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refreshToken\": {{refreshToken}}\r\n}"
+						},
+						"url": {
+							"raw": "https://{{hostName}}/iaas/api/login",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"iaas",
+								"api",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Logged In User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/csp/gateway/am/api/loggedin/user",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"csp",
+								"gateway",
+								"am",
+								"api",
+								"loggedin",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Organization for Logged In User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/csp/gateway/am/api/loggedin/user/orgs",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"csp",
+								"gateway",
+								"am",
+								"api",
+								"loggedin",
+								"user",
+								"orgs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Organization",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/csp/gateway/am/api/orgs/{{organizationId}}",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"csp",
+								"gateway",
+								"am",
+								"api",
+								"orgs",
+								"{{organizationId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Organization Users",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/csp/gateway/am/api/orgs/{{organizationId}}/users",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"csp",
+								"gateway",
+								"am",
+								"api",
+								"orgs",
+								"{{organizationId}}",
+								"users"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Approvals",
+			"item": [
+				{
+					"name": "Get Approvals",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/approval/api/approvals",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"approval",
+								"api",
+								"approvals"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Approval by Deployment ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/approval/api/approvals/?search={{deploymentId}}",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"approval",
+								"api",
+								"approvals",
+								""
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "{{deploymentId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Blueprints",
+			"item": [
+				{
+					"name": "Get Blueprints",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/blueprint/api/blueprints",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"blueprint",
+								"api",
+								"blueprints"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Blueprint",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/blueprint/api/blueprints/{{blueprintId}}",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"blueprint",
+								"api",
+								"blueprints",
+								"{{blueprintId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Catalog",
+			"item": [
+				{
+					"name": "Get Catalog Items",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "https://{{hostName}}/catalog/api/items",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"catalog",
+								"api",
+								"items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Catalog Sources",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "https://{{hostName}}/catalog/api/admin/sources",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"catalog",
+								"api",
+								"admin",
+								"sources"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Catalog Item",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "https://{{hostName}}/catalog/api/items",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"catalog",
+								"api",
+								"items"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Content Source",
+			"item": [
+				{
+					"name": "Get Content Sources",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/content/api/sources",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"content",
+								"api",
+								"sources"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Custom Forms",
+			"item": [
+				{
+					"name": "Get Forms",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "https://{{hostName}}/form-service/api/forms/fetchBySourceAndType?sourceType=com.vmw.blueprint&sourceId=6dedeaaf-6b21-3da2-86b8-662c347cbef1&formType=requestForm&formFormat=YAML",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"form-service",
+								"api",
+								"forms",
+								"fetchBySourceAndType"
+							],
+							"query": [
+								{
+									"key": "sourceType",
+									"value": "com.vmw.blueprint"
+								},
+								{
+									"key": "sourceId",
+									"value": "6dedeaaf-6b21-3da2-86b8-662c347cbef1"
+								},
+								{
+									"key": "formType",
+									"value": "requestForm"
+								},
+								{
+									"key": "formFormat",
+									"value": "YAML"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Deployments",
+			"item": [
+				{
+					"name": "Get Deployments for Project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refreshToken\": {{refreshToken}}\r\n}"
+						},
+						"url": {
+							"raw": "https://{{hostName}}/iaas/api/deployments?projects={{projectId}}",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"iaas",
+								"api",
+								"deployments"
+							],
+							"query": [
+								{
+									"key": "projects",
+									"value": "{{projectId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Deployments",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/iaas/api/deployments",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"iaas",
+								"api",
+								"deployments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Deployment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/iaas/api/deployments/{{deploymentId}}",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"iaas",
+								"api",
+								"deployments",
+								"{{deploymentId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Deployment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refreshToken\": {{refreshToken}}\r\n}"
+						},
+						"url": {
+							"raw": "https://{{hostName}}/iaas/api/deployments",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"iaas",
+								"api",
+								"deployments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Deployment Resources",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refreshToken\": {{refreshToken}}\r\n}"
+						},
+						"url": {
+							"raw": "https://{{hostName}}/deployment/api/deployments/{{deploymentId}}/resources",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"deployment",
+								"api",
+								"deployments",
+								"{{deploymentId}}",
+								"resources"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Machines",
+			"item": [
+				{
+					"name": "Get Machine",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refreshToken\": {{refreshToken}}\r\n}"
+						},
+						"url": {
+							"raw": "https://{{hostName}}/iaas/api/deployments",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"iaas",
+								"api",
+								"deployments"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Networks",
+			"item": [
+				{
+					"name": "IP Ranges",
+					"item": [
+						{
+							"name": "Get External IP Ranges",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearerToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "default"
+									},
+									{
+										"key": "",
+										"value": "",
+										"type": "default",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"refreshToken\": {{refreshToken}}\r\n}"
+								},
+								"url": {
+									"raw": "https://{{hostName}}/iaas/api/external-network-ip-ranges",
+									"protocol": "https",
+									"host": [
+										"{{hostName}}"
+									],
+									"path": [
+										"iaas",
+										"api",
+										"external-network-ip-ranges"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get IP Ranges",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearerToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "default"
+									},
+									{
+										"key": "",
+										"value": "",
+										"type": "default",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"refreshToken\": {{refreshToken}}\r\n}"
+								},
+								"url": {
+									"raw": "https://{{hostName}}/iaas/api/network-ip-ranges",
+									"protocol": "https",
+									"host": [
+										"{{hostName}}"
+									],
+									"path": [
+										"iaas",
+										"api",
+										"network-ip-ranges"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get IP Range",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearerToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "default"
+									},
+									{
+										"key": "",
+										"value": "",
+										"type": "default",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"refreshToken\": {{refreshToken}}\r\n}"
+								},
+								"url": {
+									"raw": "https://{{hostName}}/iaas/api/network-ip-ranges/{{internalIpRangeId}}",
+									"protocol": "https",
+									"host": [
+										"{{hostName}}"
+									],
+									"path": [
+										"iaas",
+										"api",
+										"network-ip-ranges",
+										"{{internalIpRangeId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Allocated IPs for Internal IP Range",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearerToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "default"
+									},
+									{
+										"key": "",
+										"value": "",
+										"type": "default",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "https://{{hostName}}/iaas/api/network-ip-ranges/{{internalIpRangeId}}/ip-addresses",
+									"protocol": "https",
+									"host": [
+										"{{hostName}}"
+									],
+									"path": [
+										"iaas",
+										"api",
+										"network-ip-ranges",
+										"{{internalIpRangeId}}",
+										"ip-addresses"
+									],
+									"query": [
+										{
+											"key": "apiVersion",
+											"value": "2021-07-15",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Allocate IP for Internal IP Range Copy",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);\r",
+											"postman.setEnvironmentVariable(\"requestId\", jsonData.id);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearerToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "default"
+									},
+									{
+										"key": "",
+										"value": "",
+										"type": "default",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"numberOfIps\": \"1\"\r\n}"
+								},
+								"url": {
+									"raw": "https://{{hostName}}/iaas/api/network-ip-ranges/{{internalIpRangeId}}/ip-addresses/allocate?apiVersion=2021-07-15",
+									"protocol": "https",
+									"host": [
+										"{{hostName}}"
+									],
+									"path": [
+										"iaas",
+										"api",
+										"network-ip-ranges",
+										"{{internalIpRangeId}}",
+										"ip-addresses",
+										"allocate"
+									],
+									"query": [
+										{
+											"key": "apiVersion",
+											"value": "2021-07-15"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Release IP for Internal IP Range",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearerToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "default"
+									},
+									{
+										"key": "",
+										"value": "",
+										"type": "default",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"ipAddresses\": [\"<ipaddress>\"]\r\n}"
+								},
+								"url": {
+									"raw": "https://{{hostName}}/iaas/api/network-ip-ranges/{{internalIpRangeId}}/ip-addresses/release?apiVersion=2021-07-15",
+									"protocol": "https",
+									"host": [
+										"{{hostName}}"
+									],
+									"path": [
+										"iaas",
+										"api",
+										"network-ip-ranges",
+										"{{internalIpRangeId}}",
+										"ip-addresses",
+										"release"
+									],
+									"query": [
+										{
+											"key": "apiVersion",
+											"value": "2021-07-15"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create IP Range",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearerToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "default"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"name\": \"192.168.110.190-199\",\r\n  \"description\": \"A description\",\r\n  \"fabricNetworkIds\": [\r\n    {{networkId}}\"\r\n  ],\r\n  \"ipVersion\": \"IPv4\",\r\n  \"startIPAddress\": \"192.168.110.190\",\r\n  \"endIPAddress\": \"192.168.110.199\",\r\n  \"tags\": [\r\n    {\r\n      \"key\": \"application\",\r\n      \"value\": \"apache\"\r\n    }\r\n  ]\r\n}"
+								},
+								"url": {
+									"raw": "https://{{hostName}}/iaas/api/network-ip-ranges",
+									"protocol": "https",
+									"host": [
+										"{{hostName}}"
+									],
+									"path": [
+										"iaas",
+										"api",
+										"network-ip-ranges"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Get Networks",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{hostName}}/iaas/api/networks",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"iaas",
+								"api",
+								"networks"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Policies",
+			"item": [
+				{
+					"name": "Get Policies",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/policy/api/policies",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"policy",
+								"api",
+								"policies"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Policy by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/policy/api/policies/{{policyId}}",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"policy",
+								"api",
+								"policies",
+								"{{policyId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Pricing",
+			"item": [
+				{
+					"name": "Submit Daily Price Estimate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);\r",
+									"postman.setEnvironmentVariable(\"upfrontPriceId\", jsonData.upfrontPriceId);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"deploymentName\": \"{{deploymentName}}\",\r\n  \"projectId\": \"{{projectId}}\",\r\n  \"inputs\": {},\r\n  \"version\": \"{{catalogItemVersion}}\",\r\n  \"bulkRequestCount\": \"{{bulkRequestCount}}\"\r\n}"
+						},
+						"url": {
+							"raw": "https://{{hostName}}/catalog/api/items/{{catalogItemId}}/upfront-prices",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"catalog",
+								"api",
+								"items",
+								"{{catalogItemId}}",
+								"upfront-prices"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Daily Price Estimate Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/catalog/api/items/{{catalogItemId}}/upfront-prices/{{upfrontPriceId}}",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"catalog",
+								"api",
+								"items",
+								"{{catalogItemId}}",
+								"upfront-prices",
+								"{{upfrontPriceId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Projects",
+			"item": [
+				{
+					"name": "Get Project by Name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refreshToken\": {{refreshToken}}\r\n}"
+						},
+						"url": {
+							"raw": "https://{{hostName}}/iaas/api/projects?$filter=(name%20eq%20'{{projectName}}'",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"iaas",
+								"api",
+								"projects"
+							],
+							"query": [
+								{
+									"key": "$filter",
+									"value": "(name%20eq%20'{{projectName}}'"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Projects",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refreshToken\": {{refreshToken}}\r\n}"
+						},
+						"url": {
+							"raw": "https://{{hostName}}/iaas/api/projects",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"iaas",
+								"api",
+								"projects"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Groups",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refreshToken\": {{refreshToken}}\r\n}"
+						},
+						"url": {
+							"raw": "https://{{hostName}}/api/auth/usergroups",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"usergroups"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Project by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refreshToken\": {{refreshToken}}\r\n}"
+						},
+						"url": {
+							"raw": "https://{{hostName}}/iaas/api/projects/{{projectId}}",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"iaas",
+								"api",
+								"projects",
+								"{{projectId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Requests",
+			"item": [
+				{
+					"name": "Get Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/iaas/api/request-tracker/{{requestId}}?apiVersion=2021-07-15",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"iaas",
+								"api",
+								"request-tracker",
+								"{{requestId}}"
+							],
+							"query": [
+								{
+									"key": "apiVersion",
+									"value": "2021-07-15"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Resources",
+			"item": [
+				{
+					"name": "Get Resource Actions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "https://{{hostName}}/deployment/api/resources/{{resourceId}}/actions",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"deployment",
+								"api",
+								"resources",
+								"{{resourceId}}",
+								"actions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Resources",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "https://{{hostName}}/deployment/api/resources/",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"deployment",
+								"api",
+								"resources",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tags",
+			"item": [
+				{
+					"name": "Get Tags",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refreshToken\": {{refreshToken}}\r\n}"
+						},
+						"url": {
+							"raw": "https://{{hostName}}/iaas/api/tags?$top=5",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"iaas",
+								"api",
+								"tags"
+							],
+							"query": [
+								{
+									"key": "$top",
+									"value": "5"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get User Information",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjE1NjM3MDcyNDIxNjM0NDk2ODM3In0.eyJpc3MiOiJodHRwOi8vaWRlbnRpdHktc2VydmljZS5wcmVsdWRlLnN2Yy5jbHVzdGVyLmxvY2FsOjgwMDAiLCJpYXQiOjE2ODY5MjQ4MjEsImV4cCI6MTY4Njk1MzYyMSwianRpIjoiZTI0OWIyZGMtMjk3Ny00ZWMxLTg0MTYtMjlmMDgxNmYxMDQ5IiwiY29udGV4dCI6Ilt7XCJtdGRcIjpcInVybjpvYXNpczpuYW1lczp0YzpTQU1MOjIuMDphYzpjbGFzc2VzOlBhc3N3b3JkUHJvdGVjdGVkVHJhbnNwb3J0XCIsXCJpYXRcIjoxNjg2OTI0ODIxLFwiaWRcIjoxNX1dIiwiYXpwIjoicHJlbHVkZS11c2VyLTFqT2d0OTNuT1MiLCJzdWIiOiJjb3JwLmxvY2FsOjZiODBmMWJhLTM4OGEtNDYyMy05MWRhLTMwNjMzNzgzMzY0NSIsImRvbWFpbiI6ImNvcnAubG9jYWwiLCJ1c2VybmFtZSI6Imphc29uIiwicGVybXMiOlsiY3NwOm9yZ19vd25lciIsImV4dGVybmFsL2I4NTI0MWQ4LTA3ZDMtNDFkNC1iNjg0LTg4MTdmOGU3MzQ5ZC9jYXRhbG9nOmFkbWluIiwiZXh0ZXJuYWwvYjg1MjQxZDgtMDdkMy00MWQ0LWI2ODQtODgxN2Y4ZTczNDlkL2NhdGFsb2c6dXNlciIsImV4dGVybmFsLzA4MjJhNjdmLWQ5ODAtNGM5Mi1hM2UyLWU1MTAzOGFjM2I5Mi9vcmNoZXN0cmF0aW9uOmRlc2lnbmVyIiwiZXh0ZXJuYWwvYzA2MWJiNGUtOTMyYy00ZTM0LThmMGUtNGM4NWI4Y2Y4NjYyL0NvZGVTdHJlYW06ZXhlY3V0b3IiLCJleHRlcm5hbC8wODIyYTY3Zi1kOTgwLTRjOTItYTNlMi1lNTEwMzhhYzNiOTIvb3JjaGVzdHJhdGlvbjphZG1pbiIsImV4dGVybmFsLzRlY2E2MmI2LTg4OGUtNDQzNi04ZDAxLWZlNzZjYTdlNzE2YS9taWdyYXRpb246YWRtaW4iLCJleHRlcm5hbC80ZWNhNjJiNi04ODhlLTQ0MzYtOGQwMS1mZTc2Y2E3ZTcxNmEvYXV0b21hdGlvbnNlcnZpY2U6Y2xvdWRfYWRtaW4iLCJleHRlcm5hbC9jMDYxYmI0ZS05MzJjLTRlMzQtOGYwZS00Yzg1YjhjZjg2NjIvQ29kZVN0cmVhbTphZG1pbmlzdHJhdG9yIiwiZXh0ZXJuYWwvYzA2MWJiNGUtOTMyYy00ZTM0LThmMGUtNGM4NWI4Y2Y4NjYyL0NvZGVTdHJlYW06dXNlciIsImV4dGVybmFsLzRlY2E2MmI2LTg4OGUtNDQzNi04ZDAxLWZlNzZjYTdlNzE2YS9hdXRvbWF0aW9uc2VydmljZTp1c2VyIiwiZXh0ZXJuYWwvYzA2MWJiNGUtOTMyYy00ZTM0LThmMGUtNGM4NWI4Y2Y4NjYyL0NvZGVTdHJlYW06dmlld2VyIl0sImNvbnRleHRfbmFtZSI6IjJkMzM0NDE5LTc3NDQtNDQzYy1iZWY5LTc3NTdiYmNiNmI1MCIsImFjY3QiOiJqYXNvbiJ9.dL-H4JyOqZuyBtxNu7-qp43K1uxuzTzfN9EorR1DAAmdoy7yaMTxKVgD4pfXLzI33HVCFeUGoE5LJzDfgYmuTEVC44ejJMySoot7zx2QC1QDMCLKgXmtubGtdjdZVnmeDhwFpWqFkwqVV39639DdAzlFjoW3uEI77N7jo4AMi2pxJ-RxlBPSp-BOB4aqli23T_dkoRekkZcGn-k8WSOnVnFRgLOr0AduTh7tfx9pnKB6Hi-tNSugRAAsS53_AViOuEotN5Xy4RvVAM845ULzwOhSA-BJAg64msLouWx05kjsdi7Xj99g5alM7Y7xH3qpDVpc1zsAA-CI4rWOHJeMEg",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/csp/gateway/am/api/userinfo\n",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"csp",
+								"gateway",
+								"am",
+								"api",
+								"userinfo\n"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Information by Organization ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjE1NjM3MDcyNDIxNjM0NDk2ODM3In0.eyJpc3MiOiJodHRwOi8vaWRlbnRpdHktc2VydmljZS5wcmVsdWRlLnN2Yy5jbHVzdGVyLmxvY2FsOjgwMDAiLCJpYXQiOjE2ODY5MjQ4MjEsImV4cCI6MTY4Njk1MzYyMSwianRpIjoiZTI0OWIyZGMtMjk3Ny00ZWMxLTg0MTYtMjlmMDgxNmYxMDQ5IiwiY29udGV4dCI6Ilt7XCJtdGRcIjpcInVybjpvYXNpczpuYW1lczp0YzpTQU1MOjIuMDphYzpjbGFzc2VzOlBhc3N3b3JkUHJvdGVjdGVkVHJhbnNwb3J0XCIsXCJpYXRcIjoxNjg2OTI0ODIxLFwiaWRcIjoxNX1dIiwiYXpwIjoicHJlbHVkZS11c2VyLTFqT2d0OTNuT1MiLCJzdWIiOiJjb3JwLmxvY2FsOjZiODBmMWJhLTM4OGEtNDYyMy05MWRhLTMwNjMzNzgzMzY0NSIsImRvbWFpbiI6ImNvcnAubG9jYWwiLCJ1c2VybmFtZSI6Imphc29uIiwicGVybXMiOlsiY3NwOm9yZ19vd25lciIsImV4dGVybmFsL2I4NTI0MWQ4LTA3ZDMtNDFkNC1iNjg0LTg4MTdmOGU3MzQ5ZC9jYXRhbG9nOmFkbWluIiwiZXh0ZXJuYWwvYjg1MjQxZDgtMDdkMy00MWQ0LWI2ODQtODgxN2Y4ZTczNDlkL2NhdGFsb2c6dXNlciIsImV4dGVybmFsLzA4MjJhNjdmLWQ5ODAtNGM5Mi1hM2UyLWU1MTAzOGFjM2I5Mi9vcmNoZXN0cmF0aW9uOmRlc2lnbmVyIiwiZXh0ZXJuYWwvYzA2MWJiNGUtOTMyYy00ZTM0LThmMGUtNGM4NWI4Y2Y4NjYyL0NvZGVTdHJlYW06ZXhlY3V0b3IiLCJleHRlcm5hbC8wODIyYTY3Zi1kOTgwLTRjOTItYTNlMi1lNTEwMzhhYzNiOTIvb3JjaGVzdHJhdGlvbjphZG1pbiIsImV4dGVybmFsLzRlY2E2MmI2LTg4OGUtNDQzNi04ZDAxLWZlNzZjYTdlNzE2YS9taWdyYXRpb246YWRtaW4iLCJleHRlcm5hbC80ZWNhNjJiNi04ODhlLTQ0MzYtOGQwMS1mZTc2Y2E3ZTcxNmEvYXV0b21hdGlvbnNlcnZpY2U6Y2xvdWRfYWRtaW4iLCJleHRlcm5hbC9jMDYxYmI0ZS05MzJjLTRlMzQtOGYwZS00Yzg1YjhjZjg2NjIvQ29kZVN0cmVhbTphZG1pbmlzdHJhdG9yIiwiZXh0ZXJuYWwvYzA2MWJiNGUtOTMyYy00ZTM0LThmMGUtNGM4NWI4Y2Y4NjYyL0NvZGVTdHJlYW06dXNlciIsImV4dGVybmFsLzRlY2E2MmI2LTg4OGUtNDQzNi04ZDAxLWZlNzZjYTdlNzE2YS9hdXRvbWF0aW9uc2VydmljZTp1c2VyIiwiZXh0ZXJuYWwvYzA2MWJiNGUtOTMyYy00ZTM0LThmMGUtNGM4NWI4Y2Y4NjYyL0NvZGVTdHJlYW06dmlld2VyIl0sImNvbnRleHRfbmFtZSI6IjJkMzM0NDE5LTc3NDQtNDQzYy1iZWY5LTc3NTdiYmNiNmI1MCIsImFjY3QiOiJqYXNvbiJ9.dL-H4JyOqZuyBtxNu7-qp43K1uxuzTzfN9EorR1DAAmdoy7yaMTxKVgD4pfXLzI33HVCFeUGoE5LJzDfgYmuTEVC44ejJMySoot7zx2QC1QDMCLKgXmtubGtdjdZVnmeDhwFpWqFkwqVV39639DdAzlFjoW3uEI77N7jo4AMi2pxJ-RxlBPSp-BOB4aqli23T_dkoRekkZcGn-k8WSOnVnFRgLOr0AduTh7tfx9pnKB6Hi-tNSugRAAsS53_AViOuEotN5Xy4RvVAM845ULzwOhSA-BJAg64msLouWx05kjsdi7Xj99g5alM7Y7xH3qpDVpc1zsAA-CI4rWOHJeMEg",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/csp/gateway/am/api/orgs/{{organizationId}}/users\n",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"csp",
+								"gateway",
+								"am",
+								"api",
+								"orgs",
+								"{{organizationId}}",
+								"users\n"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Roles",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "default"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{bearerToken}}",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{hostName}}/identity/api/authorization/roles\n",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"identity",
+								"api",
+								"authorization",
+								"roles\n"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "About",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "default"
+					},
+					{
+						"key": "",
+						"value": "",
+						"type": "default",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"refreshToken\": {{refreshToken}}\r\n}"
+				},
+				"url": {
+					"raw": "https://{{hostName}}/iaas/api/about",
+					"protocol": "https",
+					"host": [
+						"{{hostName}}"
+					],
+					"path": [
+						"iaas",
+						"api",
+						"about"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
