@@ -261,10 +261,23 @@
 					"name": "Get Namespaces",
 					"request": {
 						"auth": {
-							"type": "bearer"
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;version=40.0",
+								"type": "text"
+							}
+						],
 						"url": {
 							"raw": "https://{{hostName}}/cloudapi/vcf/namespaceSummaries",
 							"protocol": "https",
@@ -275,6 +288,92 @@
 								"cloudapi",
 								"vcf",
 								"namespaceSummaries"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Namespace by Name",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;version=40.0",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://{{hostName}}/cloudapi/vcf/namespaces",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"cloudapi",
+								"vcf",
+								"namespaces"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "name=={{namespaceName}}",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Namespace",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;version=40.0",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://{{hostName}}/cloudapi/vcf/namespaces/{{namespaceId}}?force=true",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"cloudapi",
+								"vcf",
+								"namespaces",
+								"{{namespaceId}}"
+							],
+							"query": [
+								{
+									"key": "force",
+									"value": "true"
+								}
 							]
 						}
 					},
@@ -387,7 +486,7 @@
 							}
 						],
 						"url": {
-							"raw": "https://{{hostName}}/cloudapi/vcf/namespaceSummaries/{{contentLibraryId}}?force=true",
+							"raw": "https://{{hostName}}/cloudapi/vcf/contentLibraries/{{contentLibraryId}}?force=true",
 							"protocol": "https",
 							"host": [
 								"{{hostName}}"
@@ -395,7 +494,7 @@
 							"path": [
 								"cloudapi",
 								"vcf",
-								"namespaceSummaries",
+								"contentLibraries",
 								"{{contentLibraryId}}"
 							],
 							"query": [
