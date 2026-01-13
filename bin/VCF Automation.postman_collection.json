@@ -131,6 +131,282 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Get Bearer Token from Device Code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);\r",
+									"postman.setEnvironmentVariable(\"accessToken\", jsonData.access_token);"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "client_id",
+									"value": "{{clientId}}",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "urn:ietf:params:oauth:grant-type:device_code",
+									"type": "text"
+								},
+								{
+									"key": "device_code",
+									"value": "{{deviceCode}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{hostName}}/oauth/provider/token",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"oauth",
+								"provider",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Bearer Token from Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);\r",
+									"postman.setEnvironmentVariable(\"accessToken\", jsonData.access_token);"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "refresh_token",
+									"type": "text"
+								},
+								{
+									"key": "refresh_token",
+									"value": "{{apiToken}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{hostName}}/oauth/provider/token",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"oauth",
+								"provider",
+								"token"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Namespaces",
+			"item": [
+				{
+					"name": "Get Namespaces",
+					"request": {
+						"auth": {
+							"type": "bearer"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{hostName}}/cloudapi/vcf/namespaceSummaries",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"cloudapi",
+								"vcf",
+								"namespaceSummaries"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Content Libraries",
+			"item": [
+				{
+					"name": "Get Content Libraries",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;version=40.0",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://{{hostName}}/cloudapi/vcf/contentLibraries",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"cloudapi",
+								"vcf",
+								"contentLibraries"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "id=={{contentLibraryId}}",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Content Library",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;version=40.0",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://{{hostName}}/cloudapi/vcf/contentLibraries/{{contentLibraryId}}",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"cloudapi",
+								"vcf",
+								"contentLibraries",
+								"{{contentLibraryId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Content Library",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;version=40.0",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://{{hostName}}/cloudapi/vcf/namespaceSummaries/{{contentLibraryId}}?force=true",
+							"protocol": "https",
+							"host": [
+								"{{hostName}}"
+							],
+							"path": [
+								"cloudapi",
+								"vcf",
+								"namespaceSummaries",
+								"{{contentLibraryId}}"
+							],
+							"query": [
+								{
+									"key": "force",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		}
