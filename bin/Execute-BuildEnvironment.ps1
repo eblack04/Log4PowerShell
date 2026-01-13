@@ -6,6 +6,12 @@ try {
     # Generate a bearer token for the API token.
     $bearerToken = Get-BearerToken -HostName $hostName -OrgName $orgName -ApiToken $apiToken
 
+    $contentLibraries = Get-ContentLibraries -HostName $hostName -BearerToken $bearerToken
+
+    foreach($contentLibrary in $contentLibraries) {
+        Remove-ContentLibrary -HostName $hostName -BearerToken $bearerToken -ContentLibraryId $contentLibrary.id
+    }
+
     # Retrieve the namespaces for the given organization.
     $namespaces = Get-Namespaces -HostName $hostName -OrgName $orgName -BearerToken $bearerToken
 
@@ -14,7 +20,7 @@ try {
     # Start the deletion of each of the namespaces.
     foreach ($namespace in $namespaces) {
         Write-Host "Deleting namespace: $($namespace.name)"
-        Delete-Namespace -HostName $hostName -NamespaceId $($namespace.id) -BearerToken $bearerToken
+        Remove-Namespace -HostName $hostName -NamespaceId $($namespace.id) -BearerToken $bearerToken
         $deletingNamespaceIds += $namespace.id
     }
 
@@ -28,7 +34,7 @@ try {
 
             # If no namespace is retrieved, then the deletion is finished.
             if(-not $namespace) {
-                $deletingNamespaceIds = $deletingNamespaceId -ne $deletingNamespaceId
+                $deletingNamespaceIds = $deletingNamespaceIds -ne $deletingNamespaceId
             }
         }
 

@@ -92,6 +92,11 @@ Function Get-Namespaces {
         $uri = "https://$HostName/cloudapi/vcf/namespaceSummaries"
         $method = "GET"
 
+        $headers = @{
+            "Accept" = "application/json;version=40.0"
+            "Authorization" = "Bearer $BearerToken"
+        }
+
         if($OrgName) {
             $filter = [uri]::EscapeDataString("organization.name==$OrgName")
             $uri += "?filter=$filter"
@@ -147,6 +152,11 @@ Function Get-Namespace {
         $uri = "https://$HostName/cloudapi/vcf/namespaceSummaries"
         $method = "GET"
 
+        $headers = @{
+            "Accept" = "application/json;version=40.0"
+            "Authorization" = "Bearer $BearerToken"
+        }
+
         if($NamespaceId) {
             $filter = [uri]::EscapeDataString("id==$NamespaceId")
             $uri += "?filter=$filter"
@@ -167,7 +177,7 @@ Function Get-Namespace {
     }
 }
 
-Function Delete-Namespaces {
+Function Remove-Namespace {
     <#
     .NOTES
         ========================================================================
@@ -199,8 +209,13 @@ Function Delete-Namespaces {
     Write-Host "API Token:  $BearerToken"
 
     try {
-        $uri = "https://$HostName/cloudapi/vcf/namespace/$NamespaceId"
+        $uri = "https://$HostName/cloudapi/vcf/namespaces/$([uri]::EscapeDataString($NamespaceId))?force=true"
         $method = "DELETE"
+
+        $headers = @{
+            "Accept" = "application/json;version=40.0"
+            "Authorization" = "Bearer $BearerToken"
+        }
 
         Invoke-RestMethod -Uri $uri -Method $method -Headers $headers
     } catch {
@@ -242,6 +257,11 @@ Function Get-ContentLibraries {
     try {
         $uri = "https://$HostName/cloudapi/vcf/contentLibraries"
         $method = "GET"
+
+        $headers = @{
+            "Accept" = "application/json;version=40.0"
+            "Authorization" = "Bearer $BearerToken"
+        }
 
         $contentLibrariesResponse = Invoke-RestMethod -Uri $uri -Method $method -Headers $headers
 
@@ -293,6 +313,11 @@ Function Get-ContentLibraryByName {
         $uri = "https://$HostName/cloudapi/vcf/contentLibraries"
         $method = "GET"
 
+        $headers = @{
+            "Accept" = "application/json;version=40.0"
+            "Authorization" = "Bearer $BearerToken"
+        }
+
         if($ContentLibraryName) {
             $filter = [uri]::EscapeDataString("name==$ContentLibraryName")
             $uri += "?filter=$filter"
@@ -318,5 +343,53 @@ Function Get-ContentLibraryByName {
         $statusCode = $_.Exception.Response.StatusCode
         $statusDescription = $_.Exception.Response.StatusCode
         throw "Error retrieving content libraries ($statusCode):  $statusDescription"
+    }
+}
+
+Function Remove-ContentLibrary {
+    <#
+    .NOTES
+        ========================================================================
+        Created by: Todd Blackwell
+        Organization: Walmart
+        ========================================================================
+    .SYNOPSIS
+        
+    .DESCRIPTION
+        
+    .PARAMETER HostName
+        (Mandatory) The configuration object containing the cluster 
+        configuration values.
+    .PARAMETER OrgName
+        (Mandatory) The vCenter connection object that contains the cluster.
+    .PARAMETER BearerToken
+        (Mandatory) The API token.
+    .EXAMPLE
+        Initialize-Cluster -ClusterConfiguration $clusterConfiguration -Vcenter $vcenter
+    #>
+    param(
+        [Parameter(Mandatory=$false)][String]$HostName="auto-a.site-a.vcf.lab",
+        [Parameter(Mandatory=$true)][String]$ContentLibraryId,
+        [Parameter(Mandatory=$true)][String]$BearerToken
+    )
+
+    Write-Host "Host Name:  $HostName"
+    Write-Host "Content Library ID:  $ContentLibraryId"
+    Write-Host "API Token:  $BearerToken"
+
+    try {
+        $uri = "https://$HostName/cloudapi/vcf/contentLibraries/$([uri]::EscapeDataString($ContentLibraryId))?force=true"
+        $method = "DELETE"
+
+        $headers = @{
+            "Accept" = "application/json;version=40.0"
+            "Authorization" = "Bearer $BearerToken"
+        }
+
+        Invoke-RestMethod -Uri $uri -Method $method -Headers $headers
+    } catch {
+        $statusCode = $_.Exception.Response.StatusCode
+        $statusDescription = $_.Exception.Response.StatusCode
+        throw "Error deleting content library $ContentLibraryId ($statusCode):  $statusDescription"
     }
 }
