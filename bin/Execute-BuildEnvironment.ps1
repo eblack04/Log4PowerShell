@@ -2,43 +2,51 @@ $hostName = "auto-a.site-a.vcf.lab"
 $orgName = "hol-all-apps"
 $apiToken = ""
 
+Import-Module -Name "/home/holuser/main/Log4PowerShell-main/bin/VMware.VCF.Automation.psm1"
+
 try {
     # Generate a bearer token for the API token.
     $bearerToken = Get-BearerToken -HostName $hostName -OrgName $orgName -ApiToken $apiToken
 
     $contentLibraries = Get-ContentLibraries -HostName $hostName -BearerToken $bearerToken
 
-    foreach($contentLibrary in $contentLibraries) {
+    foreach ($contentLibrary in $contentLibraries) {
         Remove-ContentLibrary -HostName $hostName -BearerToken $bearerToken -ContentLibraryId $contentLibrary.id
     }
 
     # Retrieve the namespaces for the given organization.
-    $namespaces = Get-Namespaces -HostName $hostName -OrgName $orgName -BearerToken $bearerToken
+    $namespaces = Get-Namespaces -HostName $hostName -BearerToken $bearerToken -OrgName $orgName
 
     $deletingNamespaceIds = @()
 
-    # Start the deletion of each of the namespaces.
+    # Start the deletion for each namespace.
     foreach ($namespace in $namespaces) {
-        Write-Host "Deleting namespace: $($namespace.name)"
-        Remove-Namespace -HostName $hostName -NamespaceId $($namespace.id) -BearerToken $bearerToken
+        Write-Host "Starting the deletion of namespace:  $($namespace.name)"
+        Remove-Namespace -HostName $hostName -BearerToken $bearerToken -NamespaceId $($namespace.id)
         $deletingNamespaceIds += $namespace.id
     }
 
-    # Check to make sure each namespace has finished being deleted.
+    # Iterate over the namespaces until they are all deleted.
     while ($deletingNamespaceIds.Count -gt 0) {
-        
-        # Check to see if a namespace has finished being deleted.  If so, remove
-        # it from the list of namespaces being deleted.
-        foreach ($deletingNamespaceId in $deletingNamespaceIds) {
-            $namespace = Get-Namespace -HostName $hostName -NamespaceId $deletingNamespaceId -BearerToken $bearerToken
 
-            # If no namespace is retrieved, then the deletion is finished.
+        # Check to see if the current namespace has finished being deleted.  If
+        # so, remove it from the list of namespaces being deleted.
+        foreach ($deletingNamespaceId in $deletingNamespaceIds) {
+            $namespace = Get-Namespace -HostName $hostName -BearerToken $bearerToken -Id deletingNamespaceId
+        
             if(-not $namespace) {
                 $deletingNamespaceIds = $deletingNamespaceIds -ne $deletingNamespaceId
             }
         }
 
         Start-Sleep -Seconds 15
+    }
+
+    # Next, delete the regional network settings for the organization.
+    $regionalNetworkSettingIds = Get-RegionalNetworkSettings -HostName $hostName -BearerToken $bearerToken -OrgName $orgName
+
+    foreach ($regionalNetworkSettingId in $regionalNetworkSettingIds) {
+        Remove-ContentLibrary -HostName $hostName -BearerToken $bearerToken -Id $regionalNetworkSettingId
     }
 } catch {
     $_
