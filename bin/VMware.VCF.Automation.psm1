@@ -25,9 +25,10 @@ Function Get-BearerToken {
         [Parameter(Mandatory=$true)][String]$ApiToken
     )
 
-    Write-Host "Host Name:  $HostName"
-    Write-Host "Org Name:  $OrgName"
-    Write-Host "API Token:  $ApiToken"
+    Write-Host "Get-BearerToken"
+    Write-Host "   Host Name:  $HostName"
+    Write-Host "   Org Name:  $OrgName"
+    Write-Host "   API Token:  $ApiToken"
 
     try {
         $uri = "https://$HostName/oauth/provider/token"
@@ -84,9 +85,10 @@ Function Get-Namespaces {
         [Parameter(Mandatory=$true)][String]$BearerToken
     )
 
-    Write-Host "Host Name:  $HostName"
-    Write-Host "Org Name:  $OrgName"
-    Write-Host "API Token:  $BearerToken"
+    Write-Host "Get-Namespaces"
+    Write-Host "   Host Name:  $HostName"
+    Write-Host "   Org Name:  $OrgName"
+    Write-Host "   API Token:  $BearerToken"
 
     try {
         $uri = "https://$HostName/cloudapi/vcf/namespaceSummaries"
@@ -144,9 +146,10 @@ Function Get-Namespace {
         [Parameter(Mandatory=$true)][String]$BearerToken
     )
 
-    Write-Host "Host Name:  $HostName"
-    Write-Host "ID:  $Id"
-    Write-Host "API Token:  $BearerToken"
+    Write-Host "Get-Namespace"
+    Write-Host "   Host Name:  $HostName"
+    Write-Host "   ID:  $Id"
+    Write-Host "   API Token:  $BearerToken"
 
     try {
         $uri = "https://$HostName/cloudapi/vcf/namespaceSummaries"
@@ -204,11 +207,25 @@ Function Remove-Namespace {
         [Parameter(Mandatory=$true)][String]$BearerToken
     )
 
-    Write-Host "Host Name:  $HostName"
-    Write-Host "Namespace ID:  $Id"
-    Write-Host "API Token:  $BearerToken"
+    Write-Host "Remove-Namespace"
+    Write-Host "   Host Name:  $HostName"
+    Write-Host "   ID:  $Id"
+    Write-Host "   API Token:  $BearerToken"
 
     try {
+        # First, check to see if the namespace is present as trying to delete a
+        # namespace that is either not present, or already has a status of
+        # "DELETING", will throw an exception that is not too informative.
+        $namespace = Get-Namespace -HostName $hostName -BearerToken $bearerToken -Id $Id
+
+        if ($namespace) {
+            if ($namespace.status -eq "DELETING") {
+                throw "Namespace with ID $Id is already being deleted within host $HostName"
+            }
+        } else {
+            throw "No namespace with ID $Id present within host $HostName"
+        }
+
         $uri = "https://$HostName/cloudapi/vcf/namespaces/$([uri]::EscapeDataString($Id))?force=true"
         $method = "DELETE"
 
@@ -252,9 +269,10 @@ Function Get-ContentLibraries {
         [Parameter(Mandatory=$true)][String]$BearerToken
     )
 
-    Write-Host "Host Name:  $HostName"
-    Write-Host "Name:  $Name"
-    Write-Host "API Token:  $BearerToken"
+    Write-Host "Get-ContentLibraries"
+    Write-Host "   Host Name:  $HostName"
+    Write-Host "   Name:  $Name"
+    Write-Host "   API Token:  $BearerToken"
 
     try {
         $uri = "https://$HostName/cloudapi/vcf/contentLibraries"
@@ -312,9 +330,10 @@ Function Remove-ContentLibrary {
         [Parameter(Mandatory=$true)][String]$BearerToken
     )
 
-    Write-Host "Host Name:  $HostName"
-    Write-Host "ID:  $Id"
-    Write-Host "API Token:  $BearerToken"
+    Write-Host "Remove-ContentLibrary"
+    Write-Host "   Host Name:  $HostName"
+    Write-Host "   ID:  $Id"
+    Write-Host "   API Token:  $BearerToken"
 
     try {
         $uri = "https://$HostName/cloudapi/vcf/contentLibraries/$([uri]::EscapeDataString($Id))?force=true"
@@ -369,8 +388,9 @@ Function Get-RegionalNetworkSettings {
         [Parameter(Mandatory=$true)][String]$BearerToken
     )
 
-    Write-Host "Host Name:  $HostName"
-    Write-Host "API Token:  $BearerToken"
+    Write-Host "Get-RegionalNetworkSettings"
+    Write-Host "   Host Name:  $HostName"
+    Write-Host "   Bearer Token:  $BearerToken"
 
     try {
         $uri = "https://$HostName/cloudapi/vcf/regionalNetworkSettings"
@@ -443,9 +463,10 @@ Function Remove-RegionalNetworkSetting {
         [Parameter(Mandatory=$true)][String]$BearerToken
     )
 
-    Write-Host "Host Name:  $HostName"
-    Write-Host "ID:  $Id"
-    Write-Host "API Token:  $BearerToken"
+    Write-Host "Remove-RegionalNetworkSetting"
+    Write-Host "   Host Name:  $HostName"
+    Write-Host "   ID:  $Id"
+    Write-Host "   API Token:  $BearerToken"
 
     try {
         $uri = "https://$HostName/cloudapi/vcf/regionalNetworkSettings/$([uri]::EscapeDataString($Id))"
