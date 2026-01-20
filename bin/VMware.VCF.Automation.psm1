@@ -248,10 +248,12 @@ Function Get-ContentLibraries {
     #>
     param(
         [Parameter(Mandatory=$false)][String]$HostName="auto-a.site-a.vcf.lab",
+        [Parameter(Mandatory=$true)][String]$Name,
         [Parameter(Mandatory=$true)][String]$BearerToken
     )
 
     Write-Host "Host Name:  $HostName"
+    Write-Host "Name:  $Name"
     Write-Host "API Token:  $BearerToken"
 
     try {
@@ -261,6 +263,11 @@ Function Get-ContentLibraries {
         $headers = @{
             "Accept" = "application/json;version=40.0"
             "Authorization" = "Bearer $BearerToken"
+        }
+
+        if($Name) {
+            $filter = [uri]::EscapeDataString("name==$Name")
+            $uri += "?filter=$filter"
         }
 
         $contentLibrariesResponse = Invoke-RestMethod -Uri $uri -Method $method -Headers $headers
@@ -379,6 +386,137 @@ Function Remove-ContentLibrary {
 
     try {
         $uri = "https://$HostName/cloudapi/vcf/contentLibraries/$([uri]::EscapeDataString($ContentLibraryId))?force=true"
+        $method = "DELETE"
+
+        $headers = @{
+            "Accept" = "application/json;version=40.0"
+            "Authorization" = "Bearer $BearerToken"
+        }
+
+        Invoke-RestMethod -Uri $uri -Method $method -Headers $headers
+    } catch {
+        $statusCode = $_.Exception.Response.StatusCode
+        $statusDescription = $_.Exception.Response.StatusCode
+        throw "Error deleting content library $ContentLibraryId ($statusCode):  $statusDescription"
+    }
+}
+
+Function Get-RegionalNetworkSettings {
+    <#
+    .NOTES
+        ========================================================================
+        Created by: Todd Blackwell
+        Organization: Walmart
+        ========================================================================
+    .SYNOPSIS
+        
+    .DESCRIPTION
+        
+    .PARAMETER HostName
+        (Mandatory) The configuration object containing the cluster 
+        configuration values.
+    .PARAMETER Id
+        (Optional) 
+    .PARAMETER Name
+        (Optional)
+    .PARAMETER OrgId
+        (Optional) 
+    .PARAMETER OrgName
+        (Optional) 
+    .PARAMETER BearerToken
+        (Mandatory) The API token.
+    .EXAMPLE
+        Initialize-Cluster -ClusterConfiguration $clusterConfiguration -Vcenter $vcenter
+    #>
+    param(
+        [Parameter(Mandatory=$false)][String]$HostName="auto-a.site-a.vcf.lab",
+        [Parameter(Mandatory=$false)][String]$Id,
+        [Parameter(Mandatory=$false)][String]$Name,
+        [Parameter(Mandatory=$false)][String]$OrgId,
+        [Parameter(Mandatory=$false)][String]$OrgName,
+        [Parameter(Mandatory=$true)][String]$BearerToken
+    )
+
+    Write-Host "Host Name:  $HostName"
+    Write-Host "API Token:  $BearerToken"
+
+    try {
+        $uri = "https://$HostName/cloudapi/vcf/regionalNetworkSettings"
+        $method = "GET"
+
+        $headers = @{
+            "Accept" = "application/json;version=40.0"
+            "Authorization" = "Bearer $BearerToken"
+        }
+
+        if($Id) {
+            $filter = [uri]::EscapeDataString("id==$Id")
+            $uri += "?filter=$filter"
+        }
+
+        if($Name) {
+            $filter = [uri]::EscapeDataString("name==$Name")
+            $uri += "?filter=$filter"
+        }
+
+        if($OrgId) {
+            $filter = [uri]::EscapeDataString("orgRef.id==$OrgId")
+            $uri += "?filter=$filter"
+        }
+
+        if($OrgName) {
+            $filter = [uri]::EscapeDataString("orgRef.name==$OrgName")
+            $uri += "?filter=$filter"
+        }
+
+        $regionalNetworkSettingsResponse = Invoke-RestMethod -Uri $uri -Method $method -Headers $headers
+
+        if($regionalNetworkSettingsResponse) {
+            $regionalNetworkSettingsJson = $regionalNetworkSettingsResponse | ConvertTo-Json -Depth 5
+            Write-Host "Regional Network Settings:  $regionalNetworkSettingsJson"
+
+            return $regionalNetworkSettingsResponse.values
+        }
+    } catch {
+        $statusCode = $_.Exception.Response.StatusCode
+        $statusDescription = $_.Exception.Response.StatusCode
+        throw "Error retrieving content libraries ($statusCode):  $statusDescription"
+    }
+}
+
+Function Remove-RegionalNetworkSetting {
+    <#
+    .NOTES
+        ========================================================================
+        Created by: Todd Blackwell
+        Organization: Walmart
+        ========================================================================
+    .SYNOPSIS
+        
+    .DESCRIPTION
+        
+    .PARAMETER HostName
+        (Mandatory) The configuration object containing the cluster 
+        configuration values.
+    .PARAMETER Id
+        (Mandatory) The vCenter connection object that contains the cluster.
+    .PARAMETER BearerToken
+        (Mandatory) The API token.
+    .EXAMPLE
+        Initialize-Cluster -ClusterConfiguration $clusterConfiguration -Vcenter $vcenter
+    #>
+    param(
+        [Parameter(Mandatory=$false)][String]$HostName="auto-a.site-a.vcf.lab",
+        [Parameter(Mandatory=$true)][String]$Id,
+        [Parameter(Mandatory=$true)][String]$BearerToken
+    )
+
+    Write-Host "Host Name:  $HostName"
+    Write-Host "ID:  $Id"
+    Write-Host "API Token:  $BearerToken"
+
+    try {
+        $uri = "https://$HostName/cloudapi/vcf/regionalNetworkSettings/$([uri]::EscapeDataString($Id))"
         $method = "DELETE"
 
         $headers = @{
