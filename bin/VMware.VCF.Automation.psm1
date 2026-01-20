@@ -140,12 +140,12 @@ Function Get-Namespace {
     #>
     param(
         [Parameter(Mandatory=$false)][String]$HostName="auto-a.site-a.vcf.lab",
-        [Parameter(Mandatory=$true)][String]$NamespaceId,
+        [Parameter(Mandatory=$true)][String]$Id,
         [Parameter(Mandatory=$true)][String]$BearerToken
     )
 
     Write-Host "Host Name:  $HostName"
-    Write-Host "Namespace ID:  $NamespaceId"
+    Write-Host "ID:  $Id"
     Write-Host "API Token:  $BearerToken"
 
     try {
@@ -157,8 +157,8 @@ Function Get-Namespace {
             "Authorization" = "Bearer $BearerToken"
         }
 
-        if($NamespaceId) {
-            $filter = [uri]::EscapeDataString("id==$NamespaceId")
+        if($Id) {
+            $filter = [uri]::EscapeDataString("id==$Id")
             $uri += "?filter=$filter"
         }
 
@@ -191,7 +191,7 @@ Function Remove-Namespace {
     .PARAMETER HostName
         (Mandatory) The configuration object containing the cluster 
         configuration values.
-    .PARAMETER NamespaceId
+    .PARAMETER Id
         (Mandatory) The vCenter connection object that contains the cluster.
     .PARAMETER BearerToken
         (Mandatory) The API token.
@@ -200,16 +200,16 @@ Function Remove-Namespace {
     #>
     param(
         [Parameter(Mandatory=$false)][String]$HostName="auto-a.site-a.vcf.lab",
-        [Parameter(Mandatory=$true)][String]$NamespaceId,
+        [Parameter(Mandatory=$true)][String]$Id,
         [Parameter(Mandatory=$true)][String]$BearerToken
     )
 
     Write-Host "Host Name:  $HostName"
-    Write-Host "Namespace ID:  $NamespaceId"
+    Write-Host "Namespace ID:  $Id"
     Write-Host "API Token:  $BearerToken"
 
     try {
-        $uri = "https://$HostName/cloudapi/vcf/namespaces/$([uri]::EscapeDataString($NamespaceId))?force=true"
+        $uri = "https://$HostName/cloudapi/vcf/namespaces/$([uri]::EscapeDataString($Id))?force=true"
         $method = "DELETE"
 
         $headers = @{
@@ -248,7 +248,7 @@ Function Get-ContentLibraries {
     #>
     param(
         [Parameter(Mandatory=$false)][String]$HostName="auto-a.site-a.vcf.lab",
-        [Parameter(Mandatory=$true)][String]$Name,
+        [Parameter(Mandatory=$false)][String]$Name,
         [Parameter(Mandatory=$true)][String]$BearerToken
     )
 
@@ -285,74 +285,6 @@ Function Get-ContentLibraries {
     }
 }
 
-Function Get-ContentLibraryByName {
-    <#
-    .NOTES
-        ========================================================================
-        Created by: Todd Blackwell
-        Organization: Walmart
-        ========================================================================
-    .SYNOPSIS
-        
-    .DESCRIPTION
-        
-    .PARAMETER HostName
-        (Mandatory) The configuration object containing the cluster 
-        configuration values.
-    .PARAMETER OrgName
-        (Mandatory) The vCenter connection object that contains the cluster.
-    .PARAMETER BearerToken
-        (Mandatory) The API token.
-    .EXAMPLE
-        Initialize-Cluster -ClusterConfiguration $clusterConfiguration -Vcenter $vcenter
-    #>
-    param(
-        [Parameter(Mandatory=$false)][String]$HostName="auto-a.site-a.vcf.lab",
-        [Parameter(Mandatory=$true)][String]$ContentLibraryName,
-        [Parameter(Mandatory=$true)][String]$BearerToken
-    )
-
-    Write-Host "Host Name:  $HostName"
-    Write-Host "Content Library Name:  $ContentLibraryName"
-    Write-Host "API Token:  $BearerToken"
-
-    try {
-        $uri = "https://$HostName/cloudapi/vcf/contentLibraries"
-        $method = "GET"
-
-        $headers = @{
-            "Accept" = "application/json;version=40.0"
-            "Authorization" = "Bearer $BearerToken"
-        }
-
-        if($ContentLibraryName) {
-            $filter = [uri]::EscapeDataString("name==$ContentLibraryName")
-            $uri += "?filter=$filter"
-        }
-
-        $contentLibrariesResponse = Invoke-RestMethod -Uri $uri -Method $method -Headers $headers
-
-        if($contentLibrariesResponse) {
-            $contentLibrariesJson = $contentLibrariesResponse | ConvertTo-Json -Depth 5
-            Write-Host "Content Libraries:  $contentLibrariesJson"
-
-            if($contentLibrariesResponse.values.Count -eq 0) {
-                throw "No content library found with name $ContentLibraryName"
-            }
-
-            if($contentLibrariesResponse.values.Count -gt 1) {
-                throw "More than one content library found with name $ContentLibraryName"
-            }
-
-            return $contentLibrariesResponse.values
-        }
-    } catch {
-        $statusCode = $_.Exception.Response.StatusCode
-        $statusDescription = $_.Exception.Response.StatusCode
-        throw "Error retrieving content libraries ($statusCode):  $statusDescription"
-    }
-}
-
 Function Remove-ContentLibrary {
     <#
     .NOTES
@@ -376,16 +308,16 @@ Function Remove-ContentLibrary {
     #>
     param(
         [Parameter(Mandatory=$false)][String]$HostName="auto-a.site-a.vcf.lab",
-        [Parameter(Mandatory=$true)][String]$ContentLibraryId,
+        [Parameter(Mandatory=$true)][String]$Id,
         [Parameter(Mandatory=$true)][String]$BearerToken
     )
 
     Write-Host "Host Name:  $HostName"
-    Write-Host "Content Library ID:  $ContentLibraryId"
+    Write-Host "ID:  $Id"
     Write-Host "API Token:  $BearerToken"
 
     try {
-        $uri = "https://$HostName/cloudapi/vcf/contentLibraries/$([uri]::EscapeDataString($ContentLibraryId))?force=true"
+        $uri = "https://$HostName/cloudapi/vcf/contentLibraries/$([uri]::EscapeDataString($Id))?force=true"
         $method = "DELETE"
 
         $headers = @{
