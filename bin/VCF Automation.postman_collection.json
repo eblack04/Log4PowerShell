@@ -1,513 +1,640 @@
 {
-	"info": {
-		"_postman_id": "072d918a-cd85-45d0-930b-3252bd2f2465",
-		"name": "VCF Automation",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "50270390",
-		"_collection_link": "https://todd-blackwell-7779155.postman.co/workspace/Edward-Blackwell's-Workspace~423cb085-ee9e-436c-87bd-37ad90fc4613/collection/50270390-072d918a-cd85-45d0-930b-3252bd2f2465?action=share&source=collection_link&creator=50270390"
-	},
-	"item": [
-		{
-			"name": "Auth",
-			"item": [
-				{
-					"name": "Request Access",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"var jsonData = JSON.parse(responseBody);\r",
-									"postman.setEnvironmentVariable(\"deviceCode\", jsonData.device_code);"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/x-www-form-urlencoded",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "client_id",
-									"value": "{{clientId}}",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "https://{{hostName}}/oauth/tenant/{{organization}}/device_authorization",
-							"protocol": "https",
-							"host": [
-								"{{hostName}}"
-							],
-							"path": [
-								"oauth",
-								"tenant",
-								"{{organization}}",
-								"device_authorization"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Access Token",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"var jsonData = JSON.parse(responseBody);\r",
-									"postman.setEnvironmentVariable(\"accessToken\", jsonData.access_token);"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/x-www-form-urlencoded",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "client_id",
-									"value": "{{clientId}}",
-									"type": "text"
-								},
-								{
-									"key": "grant_type",
-									"value": "urn:ietf:params:oauth:grant-type:device_code",
-									"type": "text"
-								},
-								{
-									"key": "device_code",
-									"value": "{{deviceCode}}",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "https://{{hostName}}/oauth/tenant/{{organization}}/token",
-							"protocol": "https",
-							"host": [
-								"{{hostName}}"
-							],
-							"path": [
-								"oauth",
-								"tenant",
-								"{{organization}}",
-								"token"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Bearer Token from Device Code",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"var jsonData = JSON.parse(responseBody);\r",
-									"postman.setEnvironmentVariable(\"accessToken\", jsonData.access_token);"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/x-www-form-urlencoded",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "client_id",
-									"value": "{{clientId}}",
-									"type": "text"
-								},
-								{
-									"key": "grant_type",
-									"value": "urn:ietf:params:oauth:grant-type:device_code",
-									"type": "text"
-								},
-								{
-									"key": "device_code",
-									"value": "{{deviceCode}}",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "https://{{hostName}}/oauth/provider/token",
-							"protocol": "https",
-							"host": [
-								"{{hostName}}"
-							],
-							"path": [
-								"oauth",
-								"provider",
-								"token"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Bearer Token from Refresh Token",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"var jsonData = JSON.parse(responseBody);\r",
-									"postman.setEnvironmentVariable(\"accessToken\", jsonData.access_token);"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/x-www-form-urlencoded",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "grant_type",
-									"value": "refresh_token",
-									"type": "text"
-								},
-								{
-									"key": "refresh_token",
-									"value": "{{apiToken}}",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "https://{{hostName}}/oauth/provider/token",
-							"protocol": "https",
-							"host": [
-								"{{hostName}}"
-							],
-							"path": [
-								"oauth",
-								"provider",
-								"token"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Namespaces",
-			"item": [
-				{
-					"name": "Get Namespaces",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json;version=40.0",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "https://{{hostName}}/cloudapi/vcf/namespaceSummaries",
-							"protocol": "https",
-							"host": [
-								"{{hostName}}"
-							],
-							"path": [
-								"cloudapi",
-								"vcf",
-								"namespaceSummaries"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Namespace by Name",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json;version=40.0",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "https://{{hostName}}/cloudapi/vcf/namespaces",
-							"protocol": "https",
-							"host": [
-								"{{hostName}}"
-							],
-							"path": [
-								"cloudapi",
-								"vcf",
-								"namespaces"
-							],
-							"query": [
-								{
-									"key": "filter",
-									"value": "name=={{namespaceName}}",
-									"disabled": true
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Namespace",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json;version=40.0",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "https://{{hostName}}/cloudapi/vcf/namespaces/{{namespaceId}}?force=true",
-							"protocol": "https",
-							"host": [
-								"{{hostName}}"
-							],
-							"path": [
-								"cloudapi",
-								"vcf",
-								"namespaces",
-								"{{namespaceId}}"
-							],
-							"query": [
-								{
-									"key": "force",
-									"value": "true"
-								}
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Content Libraries",
-			"item": [
-				{
-					"name": "Get Content Libraries",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json;version=40.0",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "https://{{hostName}}/cloudapi/vcf/contentLibraries",
-							"protocol": "https",
-							"host": [
-								"{{hostName}}"
-							],
-							"path": [
-								"cloudapi",
-								"vcf",
-								"contentLibraries"
-							],
-							"query": [
-								{
-									"key": "filter",
-									"value": "id=={{contentLibraryId}}",
-									"disabled": true
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Content Library",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json;version=40.0",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "https://{{hostName}}/cloudapi/vcf/contentLibraries/{{contentLibraryId}}",
-							"protocol": "https",
-							"host": [
-								"{{hostName}}"
-							],
-							"path": [
-								"cloudapi",
-								"vcf",
-								"contentLibraries",
-								"{{contentLibraryId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Content Library",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json;version=40.0",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "https://{{hostName}}/cloudapi/vcf/contentLibraries/{{contentLibraryId}}?force=true",
-							"protocol": "https",
-							"host": [
-								"{{hostName}}"
-							],
-							"path": [
-								"cloudapi",
-								"vcf",
-								"contentLibraries",
-								"{{contentLibraryId}}"
-							],
-							"query": [
-								{
-									"key": "force",
-									"value": "true"
-								}
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		}
-	]
+  "info": {
+    "_postman_id": "072d918a-cd85-45d0-930b-3252bd2f2465",
+    "name": "VCF Automation",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "50270390",
+    "_collection_link": "https://go.postman.co/collection/50270390-072d918a-cd85-45d0-930b-3252bd2f2465?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Request Access",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody);\r",
+                  "postman.setEnvironmentVariable(\"deviceCode\", jsonData.device_code);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "client_id",
+                  "value": "{{clientId}}",
+                  "type": "text",
+                  "uuid": "4cac8ed3-5b3a-484e-9daa-e27d014a468d"
+                }
+              ]
+            },
+            "url": {
+              "raw": "https://{{hostName}}/oauth/tenant/{{organization}}/device_authorization",
+              "protocol": "https",
+              "host": [
+                "{{hostName}}"
+              ],
+              "path": [
+                "oauth",
+                "tenant",
+                "{{organization}}",
+                "device_authorization"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Access Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody);\r",
+                  "postman.setEnvironmentVariable(\"accessToken\", jsonData.access_token);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "client_id",
+                  "value": "{{clientId}}",
+                  "type": "text",
+                  "uuid": "7c354d10-cf74-41c3-9503-231f648bcea8"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "urn:ietf:params:oauth:grant-type:device_code",
+                  "type": "text",
+                  "uuid": "3ea159fc-f9e7-4dc9-9ab9-23a59a46eb5c"
+                },
+                {
+                  "key": "device_code",
+                  "value": "{{deviceCode}}",
+                  "type": "text",
+                  "uuid": "aca94364-ad22-444a-9e73-d1292f7ae940"
+                }
+              ]
+            },
+            "url": {
+              "raw": "https://{{hostName}}/oauth/tenant/{{organization}}/token",
+              "protocol": "https",
+              "host": [
+                "{{hostName}}"
+              ],
+              "path": [
+                "oauth",
+                "tenant",
+                "{{organization}}",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Bearer Token from Device Code",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody);\r",
+                  "postman.setEnvironmentVariable(\"accessToken\", jsonData.access_token);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "client_id",
+                  "value": "{{clientId}}",
+                  "type": "text",
+                  "uuid": "7c354d10-cf74-41c3-9503-231f648bcea8"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "urn:ietf:params:oauth:grant-type:device_code",
+                  "type": "text",
+                  "uuid": "3ea159fc-f9e7-4dc9-9ab9-23a59a46eb5c"
+                },
+                {
+                  "key": "device_code",
+                  "value": "{{deviceCode}}",
+                  "type": "text",
+                  "uuid": "aca94364-ad22-444a-9e73-d1292f7ae940"
+                }
+              ]
+            },
+            "url": {
+              "raw": "https://{{hostName}}/oauth/provider/token",
+              "protocol": "https",
+              "host": [
+                "{{hostName}}"
+              ],
+              "path": [
+                "oauth",
+                "provider",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Bearer Token from Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody);\r",
+                  "postman.setEnvironmentVariable(\"accessToken\", jsonData.access_token);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "refresh_token",
+                  "type": "text",
+                  "uuid": "3ea159fc-f9e7-4dc9-9ab9-23a59a46eb5c"
+                },
+                {
+                  "key": "refresh_token",
+                  "value": "{{apiToken}}",
+                  "type": "text",
+                  "uuid": "75e96fd7-f0e8-4849-867d-0b36d5609f6a"
+                }
+              ]
+            },
+            "url": {
+              "raw": "https://{{hostName}}/oauth/provider/token",
+              "protocol": "https",
+              "host": [
+                "{{hostName}}"
+              ],
+              "path": [
+                "oauth",
+                "provider",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Namespaces",
+      "item": [
+        {
+          "name": "Get Namespaces",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json;version=40.0",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://{{hostName}}/cloudapi/vcf/namespaceSummaries",
+              "protocol": "https",
+              "host": [
+                "{{hostName}}"
+              ],
+              "path": [
+                "cloudapi",
+                "vcf",
+                "namespaceSummaries"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Namespace by Name",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json;version=40.0",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://{{hostName}}/cloudapi/vcf/namespaceSummaries",
+              "protocol": "https",
+              "host": [
+                "{{hostName}}"
+              ],
+              "path": [
+                "cloudapi",
+                "vcf",
+                "namespaceSummaries"
+              ],
+              "query": [
+                {
+                  "key": "filter",
+                  "value": "name=={{namespaceName}}",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Namespace",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json;version=40.0",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://{{hostName}}/cloudapi/vcf/namespaces/{{namespaceId}}?force=true",
+              "protocol": "https",
+              "host": [
+                "{{hostName}}"
+              ],
+              "path": [
+                "cloudapi",
+                "vcf",
+                "namespaces",
+                "{{namespaceId}}"
+              ],
+              "query": [
+                {
+                  "key": "force",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Content Libraries",
+      "item": [
+        {
+          "name": "Get Content Libraries",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json;version=40.0",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://{{hostName}}/cloudapi/vcf/contentLibraries",
+              "protocol": "https",
+              "host": [
+                "{{hostName}}"
+              ],
+              "path": [
+                "cloudapi",
+                "vcf",
+                "contentLibraries"
+              ],
+              "query": [
+                {
+                  "key": "filter",
+                  "value": "id=={{contentLibraryId}}",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Content Library",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json;version=40.0",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://{{hostName}}/cloudapi/vcf/contentLibraries/{{contentLibraryId}}",
+              "protocol": "https",
+              "host": [
+                "{{hostName}}"
+              ],
+              "path": [
+                "cloudapi",
+                "vcf",
+                "contentLibraries",
+                "{{contentLibraryId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Content Library",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json;version=40.0",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://{{hostName}}/cloudapi/vcf/contentLibraries/{{contentLibraryId}}?force=true",
+              "protocol": "https",
+              "host": [
+                "{{hostName}}"
+              ],
+              "path": [
+                "cloudapi",
+                "vcf",
+                "contentLibraries",
+                "{{contentLibraryId}}"
+              ],
+              "query": [
+                {
+                  "key": "force",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Regions",
+      "item": [
+        {
+          "name": "Networking Settings",
+          "item": [
+            {
+              "name": "Get Networking Settings",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json;version=40.0",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "https://{{hostName}}/cloudapi/vcf/regionalNetworkingSettings",
+                  "protocol": "https",
+                  "host": [
+                    "{{hostName}}"
+                  ],
+                  "path": [
+                    "cloudapi",
+                    "vcf",
+                    "regionalNetworkingSettings"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Networking Settings",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json;version=40.0",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "https://{{hostName}}/cloudapi/vcf/regionalNetworkingSettings",
+                  "protocol": "https",
+                  "host": [
+                    "{{hostName}}"
+                  ],
+                  "path": [
+                    "cloudapi",
+                    "vcf",
+                    "regionalNetworkingSettings"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Get Regions",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json;version=40.0",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://{{hostName}}/cloudapi/vcf/namespaceSummaries",
+              "protocol": "https",
+              "host": [
+                "{{hostName}}"
+              ],
+              "path": [
+                "cloudapi",
+                "vcf",
+                "namespaceSummaries"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
 }
