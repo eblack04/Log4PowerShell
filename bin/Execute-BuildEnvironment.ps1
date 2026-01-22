@@ -1,6 +1,10 @@
 $hostName = "auto-a.site-a.vcf.lab"
 $orgName = "hol-all-apps"
-$apiToken = ""
+if ($env:ApiToken) {
+    $apiToken = $env:ApiToken
+} else {
+    $apiToken = ""
+}
 
 Import-Module -Name "/home/holuser/main/Log4PowerShell-main/bin/VMware.VCF.Automation.psm1"
 
@@ -46,9 +50,8 @@ try {
     $regionalNetworkSettingIds = Get-RegionalNetworkSettings -HostName $hostName -BearerToken $bearerToken -OrgName $orgName
 
     foreach ($regionalNetworkSettingId in $regionalNetworkSettingIds) {
-        Remove-ContentLibrary -HostName $hostName -BearerToken $bearerToken -Id $regionalNetworkSettingId
+        Remove-RegionalNetworkSetting -HostName $hostName -BearerToken $bearerToken -Id $regionalNetworkSettingId.id
     }
 } catch {
     $_
 }
-
