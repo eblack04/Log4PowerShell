@@ -393,7 +393,7 @@ Function Get-RegionalNetworkSettings {
     Write-Host "   Bearer Token:  $BearerToken"
 
     try {
-        $uri = "https://$HostName/cloudapi/vcf/regionalNetworkSettings"
+        $uri = "https://$HostName/cloudapi/vcf/regionalNetworkingSettings"
         $method = "GET"
 
         $headers = @{
@@ -432,7 +432,7 @@ Function Get-RegionalNetworkSettings {
     } catch {
         $statusCode = $_.Exception.Response.StatusCode
         $statusDescription = $_.Exception.Response.StatusCode
-        throw "Error retrieving content libraries ($statusCode):  $statusDescription"
+        throw "Error retrieving regional network setting $Id ($statusCode):  $statusDescription"
     }
 }
 
@@ -469,7 +469,7 @@ Function Remove-RegionalNetworkSetting {
     Write-Host "   API Token:  $BearerToken"
 
     try {
-        $uri = "https://$HostName/cloudapi/vcf/regionalNetworkSettings/$([uri]::EscapeDataString($Id))"
+        $uri = "https://$HostName/cloudapi/vcf/regionalNetworkingSettings/$([uri]::EscapeDataString($Id))"
         $method = "DELETE"
 
         $headers = @{
@@ -481,6 +481,6 @@ Function Remove-RegionalNetworkSetting {
     } catch {
         $statusCode = $_.Exception.Response.StatusCode
         $statusDescription = $_.Exception.Response.StatusCode
-        throw "Error deleting content library $ContentLibraryId ($statusCode):  $statusDescription"
+        throw "Error deleting regional network setting $Id ($statusCode):  $statusDescription"
     }
 }
