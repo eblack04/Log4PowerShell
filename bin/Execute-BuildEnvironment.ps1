@@ -11,7 +11,7 @@ try {
     $contentLibraries = Get-ContentLibraries -HostName $hostName -BearerToken $bearerToken
 
     foreach ($contentLibrary in $contentLibraries) {
-        Remove-ContentLibrary -HostName $hostName -BearerToken $bearerToken -ContentLibraryId $contentLibrary.id
+        Remove-ContentLibrary -HostName $hostName -BearerToken $bearerToken -Id $contentLibrary.id
     }
 
     # Retrieve the namespaces for the given organization.
@@ -22,7 +22,7 @@ try {
     # Start the deletion for each namespace.
     foreach ($namespace in $namespaces) {
         Write-Host "Starting the deletion of namespace:  $($namespace.name)"
-        Remove-Namespace -HostName $hostName -BearerToken $bearerToken -NamespaceId $($namespace.id)
+        Remove-Namespace -HostName $hostName -BearerToken $bearerToken -Id $($namespace.id)
         $deletingNamespaceIds += $namespace.id
     }
 
@@ -51,3 +51,4 @@ try {
 } catch {
     $_
 }
+
