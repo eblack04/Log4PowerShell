@@ -220,7 +220,7 @@ Function Remove-Namespace {
 
         if ($namespace) {
             if ($namespace.status -eq "DELETING") {
-                throw "Namespace with ID $Id is already being deleted within host $HostName"
+                return
             }
         } else {
             throw "No namespace with ID $Id present within host $HostName"
@@ -238,7 +238,7 @@ Function Remove-Namespace {
     } catch {
         $statusCode = $_.Exception.Response.StatusCode
         $statusDescription = $_.Exception.Response.StatusCode
-        throw "Error retrieving namespaces ($statusCode):  $statusDescription"
+        throw "Error removing namespace with ID $Id ($statusCode):  $statusDescription"
     }
 }
 
