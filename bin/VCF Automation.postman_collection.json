@@ -303,6 +303,51 @@
           "response": []
         },
         {
+          "name": "Create Namespace",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json;version=40.0",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"id\": \"string\",\r\n    \"name\": \"string\",\r\n    \"description\": \"string\",\r\n    \"projectAssignment\": {\r\n        \"name\": \"string\",\r\n        \"id\": \"string\"\r\n    },\r\n    \"organization\": {\r\n        \"name\": \"string\",\r\n        \"id\": \"string\"\r\n    },\r\n    \"region\": {\r\n        \"name\": \"string\",\r\n        \"id\": \"string\"\r\n    },\r\n    \"virtualPrivateCloudName\": \"string\",\r\n    \"workloadNetwork\": {\r\n        \"name\": \"string\",\r\n        \"id\": \"string\"\r\n    },\r\n    \"zonalResourceAllocation\": [\r\n        {\r\n            \"zone\": {\r\n                \"name\": \"string\",\r\n                \"id\": \"string\"\r\n            },\r\n            \"resourceAllocation\": {\r\n                \"memoryLimitMiB\": 0,\r\n                \"memoryReservationMiB\": 0,\r\n                \"cpuLimitMHz\": 0,\r\n                \"cpuReservationMHz\": 0,\r\n                \"vmClassReservations\": [\r\n                    {\r\n                        \"virtualMachineClassName\": \"string\",\r\n                        \"count\": 0\r\n                    }\r\n                ]\r\n            }\r\n        }\r\n    ],\r\n    \"proxyURL\": \"string\",\r\n    \"status\": \"string\",\r\n    \"vcReference\": {\r\n        \"supervisorUuid\": \"string\",\r\n        \"vcUuid\": \"string\"\r\n    },\r\n    \"storageClasses\": [\r\n        {\r\n            \"storageClass\": {\r\n                \"name\": \"string\",\r\n                \"id\": \"string\"\r\n            },\r\n            \"storageLimitMiB\": 0\r\n        }\r\n    ],\r\n    \"virtualMachineClasses\": [\r\n        {\r\n            \"name\": \"string\",\r\n            \"id\": \"string\"\r\n        }\r\n    ],\r\n    \"contentLibraries\": [\r\n        {\r\n            \"name\": \"string\",\r\n            \"id\": \"string\"\r\n        }\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://{{hostName}}/cloudapi/vcf/namespaces",
+              "protocol": "https",
+              "host": [
+                "{{hostName}}"
+              ],
+              "path": [
+                "cloudapi",
+                "vcf",
+                "namespaces"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get Namespace by Name",
           "request": {
             "auth": {
@@ -383,6 +428,83 @@
                   "key": "force",
                   "value": "true"
                 }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Networking Settings",
+      "item": [
+        {
+          "name": "Get Networking Settings",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json;version=40.0",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://{{hostName}}/cloudapi/vcf/regionalNetworkingSettings",
+              "protocol": "https",
+              "host": [
+                "{{hostName}}"
+              ],
+              "path": [
+                "cloudapi",
+                "vcf",
+                "regionalNetworkingSettings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Networking Settings",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json;version=40.0",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://{{hostName}}/cloudapi/vcf/regionalNetworkingSettings",
+              "protocol": "https",
+              "host": [
+                "{{hostName}}"
+              ],
+              "path": [
+                "cloudapi",
+                "vcf",
+                "regionalNetworkingSettings"
               ]
             }
           },
@@ -519,85 +641,49 @@
       ]
     },
     {
-      "name": "Regions",
+      "name": "Projects",
       "item": [
         {
-          "name": "Networking Settings",
-          "item": [
-            {
-              "name": "Get Networking Settings",
-              "request": {
-                "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "{{accessToken}}",
-                      "type": "string"
-                    }
-                  ]
-                },
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Accept",
-                    "value": "application/json;version=40.0",
-                    "type": "text"
-                  }
-                ],
-                "url": {
-                  "raw": "https://{{hostName}}/cloudapi/vcf/regionalNetworkingSettings",
-                  "protocol": "https",
-                  "host": [
-                    "{{hostName}}"
-                  ],
-                  "path": [
-                    "cloudapi",
-                    "vcf",
-                    "regionalNetworkingSettings"
-                  ]
+          "name": "Get Project Assignments",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
                 }
-              },
-              "response": []
+              ]
             },
-            {
-              "name": "Delete Networking Settings",
-              "request": {
-                "auth": {
-                  "type": "bearer",
-                  "bearer": [
-                    {
-                      "key": "token",
-                      "value": "{{accessToken}}",
-                      "type": "string"
-                    }
-                  ]
-                },
-                "method": "DELETE",
-                "header": [
-                  {
-                    "key": "Accept",
-                    "value": "application/json;version=40.0",
-                    "type": "text"
-                  }
-                ],
-                "url": {
-                  "raw": "https://{{hostName}}/cloudapi/vcf/regionalNetworkingSettings",
-                  "protocol": "https",
-                  "host": [
-                    "{{hostName}}"
-                  ],
-                  "path": [
-                    "cloudapi",
-                    "vcf",
-                    "regionalNetworkingSettings"
-                  ]
-                }
-              },
-              "response": []
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json;version=40.0",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://{{hostName}}/cloudapi/vcf/projectAssignments",
+              "protocol": "https",
+              "host": [
+                "{{hostName}}"
+              ],
+              "path": [
+                "cloudapi",
+                "vcf",
+                "projectAssignments"
+              ]
             }
-          ]
-        },
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Regions",
+      "item": [
         {
           "name": "Get Regions",
           "request": {
@@ -629,6 +715,134 @@
                 "cloudapi",
                 "vcf",
                 "namespaceSummaries"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "VM Apps",
+      "item": [
+        {
+          "name": "Blueprints",
+          "item": [
+            {
+              "name": "Get Blueprints",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json;version=40.0",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "https://{{hostName}}/blueprint/api/blueprints",
+                  "protocol": "https",
+                  "host": [
+                    "{{hostName}}"
+                  ],
+                  "path": [
+                    "blueprint",
+                    "api",
+                    "blueprints"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Flavors",
+          "item": [
+            {
+              "name": "Get Flavors",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json;version=40.0",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "https://{{hostName}}/iaas/api/flavors",
+                  "protocol": "https",
+                  "host": [
+                    "{{hostName}}"
+                  ],
+                  "path": [
+                    "iaas",
+                    "api",
+                    "flavors"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orgs",
+      "item": [
+        {
+          "name": "Get Orgs",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "ap90947.starbucks.net",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://{{hostName}}/cloudapi/1.0.0/orgs",
+              "protocol": "https",
+              "host": [
+                "{{hostName}}"
+              ],
+              "path": [
+                "cloudapi",
+                "1.0.0",
+                "orgs"
               ]
             }
           },
